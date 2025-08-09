@@ -1,0 +1,461 @@
+@model SliderDeleteViewModel
+@{
+    ViewData["Title"] = "Delete Slider";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Sliders</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Delete</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-trash text-danger"></i>
+            Delete Slider
+        </h2>
+        <p class="text-muted">Remove slider from the homepage carousel</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                <i class="bi bi-eye"></i>
+                View Details
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Sliders
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Deletion Warning -->
+<div class="alert alert-warning" role="alert">
+    <div class="d-flex">
+        <div class="flex-shrink-0">
+            <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+        </div>
+        <div class="flex-grow-1 ms-3">
+            <h5 class="alert-heading">Deletion Warning</h5>
+            <p class="mb-2">
+                You are about to delete this slider from the homepage carousel.
+            </p>
+            <ul class="mb-0">
+                <li><strong>Soft Delete:</strong> Slider will be deactivated and hidden from the website</li>
+                @if (Model.CanBeHardDeleted)
+                {
+                    <li><strong>Hard Delete:</strong> Slider and its image will be permanently removed</li>
+                }
+                <li><strong>Display Order:</strong> Other sliders will maintain their current order</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Deletion Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-trash"></i>
+                    Slider Deletion Confirmation
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Slider Preview -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Slider Preview</h6>
+                        <div class="card">
+                            <div class="card-body p-0">
+                                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                                {
+                                    <div class="position-relative">
+                                        <img src="@Model.ImagePath" alt="@Model.Title" 
+                                             class="img-fluid w-100" style="max-height: 250px; object-fit: cover;">
+                                        
+                                        <!-- Overlay -->
+                                        <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-75 text-white p-3">
+                                            <h5 class="mb-1">@Model.Title</h5>
+                                            @if (!string.IsNullOrEmpty(Model.Description))
+                                            {
+                                                <p class="mb-0 small">@Model.Description</p>
+                                            }
+                                        </div>
+                                        
+                                        <!-- Status -->
+                                        <div class="position-absolute top-0 start-0 p-2">
+                                            <span class="badge bg-@(Model.IsActive ? "success" : "secondary")">
+                                                @(Model.IsActive ? "Active" : "Inactive")
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- Order -->
+                                        <div class="position-absolute top-0 end-0 p-2">
+                                            <span class="badge bg-dark">
+                                                Order: @Model.DisplayOrder
+                                            </span>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-4 text-muted">
+                                        <i class="bi bi-image display-4"></i>
+                                        <h5 class="mt-2">@Model.Title</h5>
+                                        <p class="mb-0">No image uploaded</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form asp-action="Delete" method="post" novalidate>
+                    <input asp-for="Id" type="hidden" />
+                    <input asp-for="Title" type="hidden" />
+                    <input asp-for="Description" type="hidden" />
+                    <input asp-for="ImagePath" type="hidden" />
+                    <input asp-for="LinkUrl" type="hidden" />
+                    <input asp-for="DisplayOrder" type="hidden" />
+                    <input asp-for="IsActive" type="hidden" />
+                    <input asp-for="CreatedDate" type="hidden" />
+                    <input asp-for="CanBeHardDeleted" type="hidden" />
+                    
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Slider Information Display -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Slider Information</h6>
+                            <dl class="row">
+                                <dt class="col-sm-4">Title:</dt>
+                                <dd class="col-sm-8"><strong>@Model.Title</strong></dd>
+                                
+                                <dt class="col-sm-4">Description:</dt>
+                                <dd class="col-sm-8">
+                                    @if (!string.IsNullOrEmpty(Model.Description))
+                                    {
+                                        @Model.Description
+                                    }
+                                    else
+                                    {
+                                        <em class="text-muted">No description</em>
+                                    }
+                                </dd>
+                                
+                                <dt class="col-sm-4">Link URL:</dt>
+                                <dd class="col-sm-8">
+                                    @if (!string.IsNullOrEmpty(Model.LinkUrl))
+                                    {
+                                        <a href="@Model.LinkUrl" target="_blank" class="text-decoration-none">
+                                            @(Model.LinkUrl.Length > 40 ? Model.LinkUrl[..40] + "..." : Model.LinkUrl)
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <em class="text-muted">No link</em>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Status & Settings</h6>
+                            <dl class="row">
+                                <dt class="col-sm-5">Display Order:</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-dark">#@Model.DisplayOrder</span>
+                                </dd>
+                                
+                                <dt class="col-sm-5">Status:</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-@(Model.IsActive ? "success" : "secondary")">
+                                        @(Model.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </dd>
+                                
+                                <dt class="col-sm-5">Created:</dt>
+                                <dd class="col-sm-7">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+                                
+                                <dt class="col-sm-5">Image:</dt>
+                                <dd class="col-sm-7">
+                                    @if (!string.IsNullOrEmpty(Model.ImagePath))
+                                    {
+                                        <span class="text-success">
+                                            <i class="bi bi-check-circle"></i>
+                                            Uploaded
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            <i class="bi bi-x-circle"></i>
+                                            No image
+                                        </span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Deletion Options -->
+                    @if (Model.CanBeHardDeleted)
+                    {
+                        <h6 class="fw-bold mb-3">Deletion Options</h6>
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    <input asp-for="HardDelete" class="form-check-input" type="checkbox" />
+                                    <label asp-for="HardDelete" class="form-check-label">
+                                        <strong>Permanent Deletion</strong> (Hard Delete)
+                                    </label>
+                                </div>
+                                <div class="form-text">
+                                    <i class="bi bi-exclamation-triangle text-warning"></i>
+                                    <strong>Warning:</strong> This will permanently remove the slider and its image file.
+                                    If unchecked, the slider will be deactivated (soft delete).
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Soft Delete Only:</strong> This slider will be deactivated and hidden from the website.
+                            The slider can be reactivated later if needed.
+                        </div>
+                    }
+
+                    <!-- Deletion Reason -->
+                    <div class="mb-4">
+                        <label asp-for="Reason" class="form-label required">Reason for Deletion</label>
+                        <textarea asp-for="Reason" class="form-control" rows="3" 
+                                  placeholder="Please provide a reason for deleting this slider..."></textarea>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle"></i>
+                            This reason will be logged for audit purposes.
+                        </div>
+                    </div>
+
+                    <!-- Final Confirmation -->
+                    <div class="alert alert-danger" role="alert">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Final Confirmation Required
+                        </h6>
+                        <p class="mb-2">
+                            Please review all information above carefully.
+                        </p>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmDeletion" required>
+                            <label class="form-check-label" for="confirmDeletion">
+                                <strong>I understand the consequences and confirm the deletion of slider "@Model.Title"</strong>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Do Not Delete
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-danger" id="deleteSliderBtn" disabled>
+                                <i class="bi bi-trash"></i>
+                                Delete Slider
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Deletion Impact -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle text-warning"></i>
+                    Deletion Impact
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="impact-summary">
+                    <div class="impact-item @(Model.IsActive ? "text-warning" : "text-success")">
+                        <i class="bi bi-@(Model.IsActive ? "exclamation-triangle" : "check-circle") me-2"></i>
+                        <span>@(Model.IsActive ? "Active slider - visible on website" : "Inactive slider - not visible")</span>
+                    </div>
+                    
+                    <div class="impact-item @(!string.IsNullOrEmpty(Model.ImagePath) ? "text-info" : "text-success")">
+                        <i class="bi bi-@(!string.IsNullOrEmpty(Model.ImagePath) ? "image" : "check-circle") me-2"></i>
+                        <span>@(!string.IsNullOrEmpty(Model.ImagePath) ? "Has uploaded image file" : "No image to remove")</span>
+                    </div>
+                    
+                    <div class="impact-item @(!string.IsNullOrEmpty(Model.LinkUrl) ? "text-info" : "text-success")">
+                        <i class="bi bi-@(!string.IsNullOrEmpty(Model.LinkUrl) ? "link-45deg" : "check-circle") me-2"></i>
+                        <span>@(!string.IsNullOrEmpty(Model.LinkUrl) ? "Has associated link" : "No external links")</span>
+                    </div>
+                    
+                    <div class="impact-item text-info">
+                        <i class="bi bi-arrow-up-down me-2"></i>
+                        <span>Display order: #@Model.DisplayOrder</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alternative Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-info"></i>
+                    Alternative Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-3">
+                    Consider these alternatives before deleting:
+                </p>
+                
+                <div class="d-grid gap-2">
+                    @if (Model.IsActive)
+                    {
+                        <button type="button" class="btn btn-outline-warning btn-sm deactivate-slider" 
+                                data-slider-id="@Model.Id">
+                            <i class="bi bi-pause-fill"></i>
+                            Just Deactivate
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-outline-success btn-sm activate-slider" 
+                                data-slider-id="@Model.Id">
+                            <i class="bi bi-play-fill"></i>
+                            Reactivate Instead
+                        </button>
+                    }
+                    
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                        Edit Slider Instead
+                    </a>
+                    
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-eye"></i>
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Enable/disable delete button based on confirmation checkbox
+            $('#confirmDeletion').on('change', function() {
+                $('#deleteSliderBtn').prop('disabled', !this.checked);
+            });
+
+            // Form submission with final confirmation
+            $('form').on('submit', function(e) {
+                if (!$('#confirmDeletion').is(':checked')) {
+                    e.preventDefault();
+                    alert('Please confirm that you understand the consequences.');
+                    return false;
+                }
+
+                const reason = $('#Reason').val().trim();
+                if (!reason) {
+                    e.preventDefault();
+                    alert('Please provide a reason for deletion.');
+                    $('#Reason').focus();
+                    return false;
+                }
+
+                const isHardDelete = $('#HardDelete').is(':checked');
+                const deleteType = isHardDelete ? 'permanently delete' : 'deactivate';
+                
+                const confirmMessage = `Are you sure you want to ${deleteType} slider "@Model.Title"?\n\n` +
+                                     `This will:\n` +
+                                     `• ${isHardDelete ? 'Permanently remove' : 'Deactivate'} the slider\n` +
+                                     @(!string.IsNullOrEmpty(Model.ImagePath) ? "`• Delete/Keep the image file\\n`" : "") +
+                                     `• Log the action for audit purposes\n` +
+                                     `\nReason: ${reason}\n\n` +
+                                     `${isHardDelete ? 'This action cannot be undone.' : 'Slider can be reactivated later.'}`;
+
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Quick deactivate/activate functionality
+            $('.deactivate-slider, .activate-slider').on('click', function() {
+                const sliderId = $(this).data('slider-id');
+                const action = $(this).hasClass('deactivate-slider') ? 'deactivate' : 'activate';
+                
+                if (confirm(`Are you sure you want to ${action} this slider instead of deleting it?`)) {
+                    $.post('@Url.Action("ToggleStatus")', { id: sliderId })
+                        .done(function(response) {
+                            if (response.success) {
+                                window.location.href = '@Url.Action("Details", new { id = Model.Id })';
+                            } else {
+                                alert('Error: ' + response.message);
+                            }
+                        })
+                        .fail(function() {
+                            alert('Error updating slider status');
+                        });
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .impact-summary {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .impact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+    </style>
+}

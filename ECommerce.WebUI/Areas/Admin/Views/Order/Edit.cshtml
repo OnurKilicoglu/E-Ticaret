@@ -1,0 +1,499 @@
+@model OrderEditViewModel
+@{
+    ViewData["Title"] = "Edit Order Status";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Orders</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="Details" asp-route-id="@Model.Id">@Model.OrderNumber</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Edit Status</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-pencil-square text-primary"></i>
+            Edit Order Status
+        </h2>
+        <p class="text-muted">Update order status and add administrative notes</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                <i class="bi bi-eye"></i>
+                View Details
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Orders
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Edit Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-gear text-primary"></i>
+                    Status Update Form
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" novalidate>
+                    <input asp-for="Id" type="hidden" />
+                    <input asp-for="CurrentStatus" type="hidden" />
+                    <input asp-for="OrderNumber" type="hidden" />
+                    <input asp-for="CustomerName" type="hidden" />
+                    <input asp-for="OrderDate" type="hidden" />
+                    <input asp-for="TotalAmount" type="hidden" />
+                    
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Current Status Display -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Current Status</label>
+                            <div>
+                                <span class="badge bg-@GetStatusCssClass(Model.CurrentStatus) fs-6">
+                                    @Model.CurrentStatus.ToString()
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Order Number</label>
+                            <div>
+                                <strong>@Model.OrderNumber</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- New Status Selection -->
+                    <div class="mb-4">
+                        <label asp-for="NewStatus" class="form-label required">New Status</label>
+                        <select asp-for="NewStatus" class="form-select" asp-items="Model.AvailableStatuses">
+                            <option value="">-- Select New Status --</option>
+                        </select>
+                        <span asp-validation-for="NewStatus" class="text-danger"></span>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle"></i>
+                            Only valid status transitions are shown based on business rules.
+                        </div>
+                    </div>
+
+                    <!-- Status Transition Rules Info -->
+                    <div class="alert alert-info" role="alert">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-lightbulb"></i>
+                            Status Transition Rules
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small>
+                                    <strong>Current Status:</strong> @Model.CurrentStatus<br>
+                                    <strong>Valid Transitions:</strong>
+                                    @if (Model.AvailableStatuses.Any())
+                                    {
+                                        @string.Join(", ", Model.AvailableStatuses.Select(s => s.Text))
+                                    }
+                                    else
+                                    {
+                                        <em>No transitions available</em>
+                                    }
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                <small>
+                                    <strong>Business Rules:</strong><br>
+                                    • Orders can only move forward in the workflow<br>
+                                    • Cancelled and Returned orders cannot be changed<br>
+                                    • Status changes are logged for audit trail
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Notes -->
+                    <div class="mb-4">
+                        <label asp-for="Notes" class="form-label">Administrative Notes</label>
+                        <textarea asp-for="Notes" class="form-control" rows="4" 
+                                  placeholder="Add notes about this status change (optional)..."></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                        <div class="form-text">
+                            These notes will be visible in the order history and help track administrative actions.
+                        </div>
+                    </div>
+
+                    <!-- Notification Options -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input asp-for="SendNotification" class="form-check-input" type="checkbox" />
+                            <label asp-for="SendNotification" class="form-check-label">
+                                Send notification email to customer
+                            </label>
+                        </div>
+                        <div class="form-text">
+                            <i class="bi bi-envelope"></i>
+                            Customer will receive an email about the status change if enabled.
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary" id="updateStatusBtn">
+                                <i class="bi bi-check-lg"></i>
+                                Update Order Status
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Order Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-receipt text-info"></i>
+                    Order Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-5">Order #:</dt>
+                    <dd class="col-sm-7"><strong>@Model.OrderNumber</strong></dd>
+                    
+                    <dt class="col-sm-5">Customer:</dt>
+                    <dd class="col-sm-7">@Model.CustomerName</dd>
+                    
+                    <dt class="col-sm-5">Order Date:</dt>
+                    <dd class="col-sm-7">@Model.OrderDate.ToString("MMM dd, yyyy")</dd>
+                    
+                    <dt class="col-sm-5">Total Amount:</dt>
+                    <dd class="col-sm-7"><strong>@Model.TotalAmount.ToString("C")</strong></dd>
+                    
+                    <dt class="col-sm-5">Current Status:</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge bg-@GetStatusCssClass(Model.CurrentStatus)">
+                            @Model.CurrentStatus.ToString()
+                        </span>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Status Workflow Guide -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-diagram-3 text-success"></i>
+                    Order Workflow
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="workflow-diagram">
+                    <div class="workflow-step @(IsCurrentOrPassed(ECommerce.Core.Entities.OrderStatus.Pending) ? "active" : "")">
+                        <div class="step-icon @(Model.CurrentStatus == ECommerce.Core.Entities.OrderStatus.Pending ? "current" : "")">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                        <div class="step-label">Pending</div>
+                    </div>
+                    <div class="workflow-arrow">↓</div>
+                    
+                    <div class="workflow-step @(IsCurrentOrPassed(ECommerce.Core.Entities.OrderStatus.Processing) ? "active" : "")">
+                        <div class="step-icon @(Model.CurrentStatus == ECommerce.Core.Entities.OrderStatus.Processing ? "current" : "")">
+                            <i class="bi bi-gear"></i>
+                        </div>
+                        <div class="step-label">Processing</div>
+                    </div>
+                    <div class="workflow-arrow">↓</div>
+                    
+                    <div class="workflow-step @(IsCurrentOrPassed(ECommerce.Core.Entities.OrderStatus.Shipped) ? "active" : "")">
+                        <div class="step-icon @(Model.CurrentStatus == ECommerce.Core.Entities.OrderStatus.Shipped ? "current" : "")">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                        <div class="step-label">Shipped</div>
+                    </div>
+                    <div class="workflow-arrow">↓</div>
+                    
+                    <div class="workflow-step @(IsCurrentOrPassed(ECommerce.Core.Entities.OrderStatus.Delivered) ? "active" : "")">
+                        <div class="step-icon @(Model.CurrentStatus == ECommerce.Core.Entities.OrderStatus.Delivered ? "current" : "")">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <div class="step-label">Delivered</div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i>
+                        Current status: <strong>@Model.CurrentStatus</strong>
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Change Impact -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle text-warning"></i>
+                    Status Change Impact
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="statusImpactInfo">
+                    <p class="text-muted small">
+                        <i class="bi bi-info-circle"></i>
+                        Select a new status to see the impact of this change.
+                    </p>
+                </div>
+                
+                <div class="alert alert-warning" style="display: none;" id="cancelWarning">
+                    <h6 class="alert-heading">Cancellation Impact</h6>
+                    <small>
+                        • Stock will be restored to inventory<br>
+                        • Payment refund may be processed<br>
+                        • Customer will be notified<br>
+                        • Order cannot be reactivated
+                    </small>
+                </div>
+                
+                <div class="alert alert-info" style="display: none;" id="shippedInfo">
+                    <h6 class="alert-heading">Shipping Notification</h6>
+                    <small>
+                        • Customer will receive tracking information<br>
+                        • Order enters shipping phase<br>
+                        • Inventory is permanently reduced<br>
+                        • Cancellation becomes restricted
+                    </small>
+                </div>
+                
+                <div class="alert alert-success" style="display: none;" id="deliveredInfo">
+                    <h6 class="alert-heading">Delivery Confirmation</h6>
+                    <small>
+                        • Customer satisfaction survey may be sent<br>
+                        • Order marked as complete<br>
+                        • Loyalty points may be awarded<br>
+                        • Return window begins
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Handle status change impact display
+            $('#NewStatus').on('change', function() {
+                const selectedStatus = $(this).val();
+                updateStatusImpact(selectedStatus);
+            });
+
+            // Form validation
+            $('#updateStatusBtn').on('click', function(e) {
+                const newStatus = $('#NewStatus').val();
+                if (!newStatus) {
+                    e.preventDefault();
+                    alert('Please select a new status');
+                    return;
+                }
+
+                // Confirmation for certain critical status changes
+                if (newStatus === 'Cancelled') {
+                    if (!confirm('Are you sure you want to cancel this order? This action will restore inventory and may process a refund.')) {
+                        e.preventDefault();
+                        return;
+                    }
+                }
+            });
+        });
+
+        function updateStatusImpact(status) {
+            // Hide all impact alerts
+            $('.alert').hide();
+            
+            const impactInfo = $('#statusImpactInfo');
+            
+            switch(status) {
+                case 'Processing':
+                    impactInfo.html(`
+                        <p class="text-info small">
+                            <i class="bi bi-gear"></i>
+                            Order will be marked as actively being processed. Staff can begin fulfillment.
+                        </p>
+                    `);
+                    break;
+                    
+                case 'Shipped':
+                    impactInfo.html(`
+                        <p class="text-primary small">
+                            <i class="bi bi-truck"></i>
+                            Order will be marked as shipped. Tracking information should be available.
+                        </p>
+                    `);
+                    $('#shippedInfo').show();
+                    break;
+                    
+                case 'Delivered':
+                    impactInfo.html(`
+                        <p class="text-success small">
+                            <i class="bi bi-check-circle"></i>
+                            Order will be marked as successfully delivered and completed.
+                        </p>
+                    `);
+                    $('#deliveredInfo').show();
+                    break;
+                    
+                case 'Cancelled':
+                    impactInfo.html(`
+                        <p class="text-danger small">
+                            <i class="bi bi-x-circle"></i>
+                            Order will be cancelled. This will trigger several automatic processes.
+                        </p>
+                    `);
+                    $('#cancelWarning').show();
+                    break;
+                    
+                case 'Returned':
+                    impactInfo.html(`
+                        <p class="text-secondary small">
+                            <i class="bi bi-arrow-return-left"></i>
+                            Order will be marked as returned. Refund processing may be required.
+                        </p>
+                    `);
+                    break;
+                    
+                default:
+                    impactInfo.html(`
+                        <p class="text-muted small">
+                            <i class="bi bi-info-circle"></i>
+                            Select a new status to see the impact of this change.
+                        </p>
+                    `);
+                    break;
+            }
+        }
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .workflow-diagram {
+            text-align: center;
+        }
+        
+        .workflow-step {
+            margin: 10px 0;
+        }
+        
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e9ecef;
+            color: #6c757d;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .workflow-step.active .step-icon {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .step-icon.current {
+            background-color: #0d6efd !important;
+            color: white !important;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+        }
+        
+        .step-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .workflow-arrow {
+            color: #6c757d;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .workflow-step.active .step-label {
+            color: #0c5460;
+            font-weight: 600;
+        }
+    </style>
+}
+
+@functions {
+    private string GetStatusCssClass(ECommerce.Core.Entities.OrderStatus status)
+    {
+        return status switch
+        {
+            ECommerce.Core.Entities.OrderStatus.Pending => "warning",
+            ECommerce.Core.Entities.OrderStatus.Processing => "info",
+            ECommerce.Core.Entities.OrderStatus.Shipped => "primary",
+            ECommerce.Core.Entities.OrderStatus.Delivered => "success",
+            ECommerce.Core.Entities.OrderStatus.Cancelled => "danger",
+            ECommerce.Core.Entities.OrderStatus.Returned => "secondary",
+            _ => "light"
+        };
+    }
+    
+    private bool IsCurrentOrPassed(ECommerce.Core.Entities.OrderStatus status)
+    {
+        var statusOrder = new[] {
+            ECommerce.Core.Entities.OrderStatus.Pending,
+            ECommerce.Core.Entities.OrderStatus.Processing,
+            ECommerce.Core.Entities.OrderStatus.Shipped,
+            ECommerce.Core.Entities.OrderStatus.Delivered
+        };
+        
+        var currentIndex = Array.IndexOf(statusOrder, Model.CurrentStatus);
+        var checkIndex = Array.IndexOf(statusOrder, status);
+        
+        return currentIndex >= checkIndex && currentIndex >= 0 && checkIndex >= 0;
+    }
+}

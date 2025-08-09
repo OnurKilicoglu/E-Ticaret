@@ -1,0 +1,310 @@
+@model SliderCreateViewModel
+@{
+    ViewData["Title"] = "Create New Slider";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Sliders</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Create New Slider</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-plus-lg text-success"></i>
+            Create New Slider
+        </h2>
+        <p class="text-muted">Add a new banner slide to the homepage carousel</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Sliders
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Create Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-image text-success"></i>
+                    Slider Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Image Upload Section -->
+                    <h6 class="fw-bold mb-3">Image Upload</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label asp-for="ImageFile" class="form-label required">Slider Image</label>
+                            <input asp-for="ImageFile" type="file" class="form-control" 
+                                   accept="image/*" id="imageFile">
+                            <span asp-validation-for="ImageFile" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i>
+                                Supported formats: JPG, PNG, GIF, WebP. Maximum size: 2MB.
+                                Recommended dimensions: 1920x600px for best results.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div class="row mb-4" id="imagePreviewContainer" style="display: none;">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Image Preview</h6>
+                                </div>
+                                <div class="card-body text-center">
+                                    <img id="imagePreview" src="" alt="Image Preview" 
+                                         class="img-fluid" style="max-height: 300px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <h6 class="fw-bold mb-3">Basic Information</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label asp-for="Title" class="form-label required">Title</label>
+                            <input asp-for="Title" class="form-control" placeholder="Enter slider title">
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                            <div class="form-text">Main heading text that will appear on the slider</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="DisplayOrder" class="form-label required">Display Order</label>
+                            <input asp-for="DisplayOrder" type="number" class="form-control" 
+                                   min="1" max="999" placeholder="1">
+                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                            <div class="form-text">Lower numbers appear first</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" 
+                                      placeholder="Enter slider description or subtitle (optional)"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                            <div class="form-text">Optional subtitle or description text</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label asp-for="LinkUrl" class="form-label">Link URL</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-link-45deg"></i>
+                                </span>
+                                <input asp-for="LinkUrl" type="url" class="form-control" 
+                                       placeholder="https://example.com (optional)">
+                            </div>
+                            <span asp-validation-for="LinkUrl" class="text-danger"></span>
+                            <div class="form-text">URL to redirect when slider is clicked (optional)</div>
+                        </div>
+                    </div>
+
+                    <!-- Status Settings -->
+                    <h6 class="fw-bold mb-3">Status Settings</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Active Slider
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                Only active sliders will be displayed on the website
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-success" id="createSliderBtn">
+                                <i class="bi bi-check-lg"></i>
+                                Create Slider
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Guidelines -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-warning"></i>
+                    Design Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6 class="small fw-bold">Image Specifications:</h6>
+                <ul class="small mb-3">
+                    <li><strong>Dimensions:</strong> 1920x600px (recommended)</li>
+                    <li><strong>Format:</strong> JPG, PNG, GIF, or WebP</li>
+                    <li><strong>Size:</strong> Maximum 2MB</li>
+                    <li><strong>Quality:</strong> High resolution for clarity</li>
+                </ul>
+
+                <h6 class="small fw-bold">Content Guidelines:</h6>
+                <ul class="small mb-3">
+                    <li>Keep titles short and impactful</li>
+                    <li>Use clear, readable fonts</li>
+                    <li>Ensure good contrast with background</li>
+                    <li>Consider mobile responsiveness</li>
+                </ul>
+
+                <h6 class="small fw-bold">Best Practices:</h6>
+                <ul class="small mb-0">
+                    <li>Use high-quality, relevant images</li>
+                    <li>Test on different screen sizes</li>
+                    <li>Keep loading time in mind</li>
+                    <li>Use meaningful alt text in titles</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Display Order Info -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-arrow-up-down text-info"></i>
+                    Display Order
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    The display order determines the sequence of sliders in the carousel.
+                </p>
+                <div class="alert alert-info">
+                    <small>
+                        <strong>Current Order:</strong> @Model.DisplayOrder<br>
+                        <strong>Tip:</strong> Lower numbers appear first in the carousel.
+                        You can change this order later from the slider list.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Image preview functionality
+            $('#imageFile').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    // Validate file size
+                    if (file.size > 2 * 1024 * 1024) { // 2MB
+                        alert('File size must be less than 2MB');
+                        $(this).val('');
+                        $('#imagePreviewContainer').hide();
+                        return;
+                    }
+
+                    // Validate file type
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                    if (!allowedTypes.includes(file.type)) {
+                        alert('Please select a valid image file (JPG, PNG, GIF, or WebP)');
+                        $(this).val('');
+                        $('#imagePreviewContainer').hide();
+                        return;
+                    }
+
+                    // Show preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#imagePreview').attr('src', e.target.result);
+                        $('#imagePreviewContainer').show();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#imagePreviewContainer').hide();
+                }
+            });
+
+            // Form validation
+            $('#createSliderBtn').on('click', function(e) {
+                const imageFile = $('#imageFile')[0].files[0];
+                const title = $('#Title').val().trim();
+
+                if (!imageFile) {
+                    e.preventDefault();
+                    alert('Please select an image file for the slider.');
+                    $('#imageFile').focus();
+                    return false;
+                }
+
+                if (!title) {
+                    e.preventDefault();
+                    alert('Please enter a title for the slider.');
+                    $('#Title').focus();
+                    return false;
+                }
+            });
+
+            // Auto-generate slug from title (if needed)
+            $('#Title').on('input', function() {
+                const title = $(this).val();
+                // Could add slug generation logic here if needed
+            });
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        #imagePreviewContainer {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+}

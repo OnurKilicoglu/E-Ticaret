@@ -1,0 +1,343 @@
+@model ProductDeleteViewModel
+@{
+    ViewData["Title"] = "Delete Product";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Products</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Delete: @Model.Name</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-trash text-danger"></i>
+            Delete Product
+        </h2>
+        <p class="text-muted">Confirm deletion of this product</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Back to Products
+        </a>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Deletion Business Rules Alert -->
+@if (Model.HasOrders)
+{
+    <div class="alert alert-warning" role="alert">
+        <div class="d-flex">
+            <div class="flex-shrink-0">
+                <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <h5 class="alert-heading">Data Integrity Protection</h5>
+                <p class="mb-2">
+                    This product has <strong>@Model.OrderCount order(s)</strong> associated with it and cannot be permanently deleted 
+                    to maintain data integrity and order history.
+                </p>
+                <p class="mb-0">
+                    <strong>Soft Delete:</strong> The product will be deactivated and hidden from customers, 
+                    but order history will be preserved.
+                </p>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info" role="alert">
+        <div class="d-flex">
+            <div class="flex-shrink-0">
+                <i class="bi bi-info-circle-fill fs-4"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <h5 class="alert-heading">Deletion Options Available</h5>
+                <p class="mb-2">
+                    This product has no associated orders, giving you the following deletion options:
+                </p>
+                <ul class="mb-0">
+                    <li><strong>Soft Delete:</strong> Deactivate the product (can be restored later)</li>
+                    <li><strong>Hard Delete:</strong> Permanently remove the product from the system</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Product Information -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-box-seam text-primary"></i>
+                    Product Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                        {
+                            <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded shadow-sm" 
+                                 style="max-height: 200px; width: 100%; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                 style="height: 200px;">
+                                <i class="bi bi-image display-1 text-muted"></i>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-md-9">
+                        <h4 class="mb-3">@Model.Name</h4>
+                        
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <p class="text-muted mb-3">@Model.Description</p>
+                        }
+                        
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <dl class="row">
+                                    <dt class="col-sm-4">SKU:</dt>
+                                    <dd class="col-sm-8">
+                                        @if (!string.IsNullOrEmpty(Model.SKU))
+                                        {
+                                            <code>@Model.SKU</code>
+                                        }
+                                        else
+                                        {
+                                            <em class="text-muted">Not set</em>
+                                        }
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">Price:</dt>
+                                    <dd class="col-sm-8">
+                                        @if (Model.HasDiscount)
+                                        {
+                                            <span class="text-decoration-line-through text-muted">@Model.Price.ToString("C")</span>
+                                            <span class="text-success fw-bold ms-2">@Model.EffectivePrice.ToString("C")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fw-bold">@Model.Price.ToString("C")</span>
+                                        }
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">Stock:</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge @(Model.StockQuantity > 10 ? "bg-success" : Model.StockQuantity > 0 ? "bg-warning" : "bg-danger")">
+                                            @Model.StockQuantity units
+                                        </span>
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="col-sm-6">
+                                <dl class="row">
+                                    <dt class="col-sm-4">Category:</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge bg-light text-dark border">@Model.CategoryName</span>
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">Status:</dt>
+                                    <dd class="col-sm-8">
+                                        @if (Model.IsActive)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i>
+                                                Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-x-circle"></i>
+                                                Inactive
+                                            </span>
+                                        }
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">Created:</dt>
+                                    <dd class="col-sm-8">
+                                        <small class="text-muted">@Model.CreatedDate.ToString("MMM dd, yyyy")</small>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deletion Actions -->
+    <div class="col-lg-4">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Deletion Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.HasOrders)
+                {
+                    <!-- Soft Delete Only (Has Orders) -->
+                    <div class="alert alert-warning">
+                        <i class="bi bi-shield-exclamation"></i>
+                        <strong>Protected Data</strong><br>
+                        <small>This product has order history and can only be soft deleted.</small>
+                    </div>
+                    
+                    <form asp-action="Delete" method="post" id="deleteForm">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" name="hardDelete" value="false" />
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-eye-slash"></i>
+                                Deactivate Product
+                            </button>
+                            <small class="text-muted">
+                                Product will be hidden from customers but order history preserved.
+                            </small>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <!-- Both Soft and Hard Delete Options -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold">Choose Deletion Type:</h6>
+                        <p class="small text-muted">Select the appropriate deletion method for this product.</p>
+                    </div>
+                    
+                    <!-- Soft Delete Option -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="bi bi-eye-slash text-warning"></i>
+                                Soft Delete (Recommended)
+                            </h6>
+                            <p class="card-text small">
+                                Deactivates the product without removing it from the database. 
+                                Can be restored later if needed.
+                            </p>
+                            <form asp-action="Delete" method="post" class="d-grid">
+                                <input type="hidden" asp-for="Id" />
+                                <input type="hidden" name="hardDelete" value="false" />
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-eye-slash"></i>
+                                    Deactivate Product
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Hard Delete Option -->
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="bi bi-trash text-danger"></i>
+                                Hard Delete (Permanent)
+                            </h6>
+                            <p class="card-text small">
+                                Permanently removes the product and all associated data. 
+                                <strong class="text-danger">This action cannot be undone!</strong>
+                            </p>
+                            <form asp-action="Delete" method="post" class="d-grid" id="hardDeleteForm">
+                                <input type="hidden" asp-for="Id" />
+                                <input type="hidden" name="hardDelete" value="true" />
+                                <button type="submit" class="btn btn-danger" onclick="return confirmHardDelete()">
+                                    <i class="bi bi-trash"></i>
+                                    Delete Permanently
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+                
+                <!-- Cancel Button -->
+                <div class="d-grid mt-3">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i>
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Business Rules Info -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-info-circle text-info"></i>
+                    Business Rules
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small mb-0">
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        <strong>Soft Delete:</strong> Product becomes inactive but data is preserved
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-shield-check text-primary"></i>
+                        <strong>Order Protection:</strong> Products with orders cannot be hard deleted
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-arrow-clockwise text-info"></i>
+                        <strong>Restoration:</strong> Soft deleted products can be reactivated
+                    </li>
+                    <li class="mb-0">
+                        <i class="bi bi-exclamation-triangle text-warning"></i>
+                        <strong>Hard Delete:</strong> Permanent removal with no recovery option
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmHardDelete() {
+            return confirm(
+                'Are you absolutely sure you want to permanently delete this product?\n\n' +
+                'This action cannot be undone and will remove:\n' +
+                '• Product information\n' +
+                '• All associated images\n' +
+                '• All product data\n\n' +
+                'Click OK to proceed with permanent deletion, or Cancel to abort.'
+            );
+        }
+
+        $(document).ready(function() {
+            // Add confirmation for soft delete as well
+            $('#deleteForm').on('submit', function(e) {
+                if (!confirm('Are you sure you want to deactivate this product? It will be hidden from customers but can be restored later.')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+}

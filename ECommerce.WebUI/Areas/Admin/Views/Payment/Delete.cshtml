@@ -1,0 +1,465 @@
+@model PaymentDeleteViewModel
+@{
+    ViewData["Title"] = "Delete Payment";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Payments</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="Details" asp-route-id="@Model.Id">Payment #@Model.Id</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Delete</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0 text-danger">
+            <i class="bi bi-exclamation-triangle"></i>
+            Delete Payment #@Model.Id
+        </h2>
+        <p class="text-muted">This action cannot be undone. Please confirm your intention.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                <i class="bi bi-eye"></i>
+                View Details
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Delete Confirmation -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Confirm Payment Deletion
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Payment Summary -->
+                <div class="alert alert-warning">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-info-circle"></i>
+                                Payment Summary
+                            </h6>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <strong>Payment ID:</strong><br>
+                                    <span class="text-muted">#@Model.Id</span>
+                                </div>
+                                <div class="col-sm-4">
+                                    <strong>Amount:</strong><br>
+                                    <span class="text-success h6">@Model.FormattedAmount</span>
+                                </div>
+                                <div class="col-sm-4">
+                                    <strong>Status:</strong><br>
+                                    <span class="badge bg-@Model.PaymentStatusCssClass">
+                                        @Model.PaymentStatusDisplayName
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-sm-4">
+                                    <strong>Order:</strong><br>
+                                    <span class="text-muted">@Model.OrderNumber</span>
+                                </div>
+                                <div class="col-sm-4">
+                                    <strong>Method:</strong><br>
+                                    <span class="text-muted">@Model.PaymentMethodDisplayName</span>
+                                </div>
+                                <div class="col-sm-4">
+                                    <strong>Date:</strong><br>
+                                    <span class="text-muted">@Model.PaymentDate.ToString("MMM dd, yyyy")</span>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.TransactionId))
+                            {
+                                <div class="mt-2">
+                                    <strong>Transaction ID:</strong>
+                                    <code>@Model.TransactionId</code>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="mt-3">
+                                <i class="bi bi-credit-card-fill text-primary" style="font-size: 3rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Information -->
+                <div class="card bg-light mb-3">
+                    <div class="card-body py-2">
+                        <h6 class="card-title mb-2">
+                            <i class="bi bi-person text-primary"></i>
+                            Customer Information
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Name:</strong> @Model.UserName
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Email:</strong> @Model.UserEmail
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deletion Form -->
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" id="deleteForm">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <input asp-for="Id" type="hidden" />
+                    <input asp-for="UserName" type="hidden" />
+                    <input asp-for="UserEmail" type="hidden" />
+                    <input asp-for="OrderNumber" type="hidden" />
+                    <input asp-for="Amount" type="hidden" />
+                    <input asp-for="PaymentMethod" type="hidden" />
+                    <input asp-for="PaymentStatus" type="hidden" />
+                    <input asp-for="TransactionId" type="hidden" />
+                    <input asp-for="PaymentDate" type="hidden" />
+
+                    <!-- Deletion Type -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Deletion Type</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input asp-for="HardDelete" class="form-check-input" type="radio" value="false" 
+                                           id="standardDelete" checked>
+                                    <label class="form-check-label" for="standardDelete">
+                                        <strong>Standard Deletion</strong>
+                                        <div class="text-muted small">
+                                            Payment will be removed from the system.
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input asp-for="HardDelete" class="form-check-input" type="radio" value="true" 
+                                           id="permanentDelete">
+                                    <label class="form-check-label" for="permanentDelete">
+                                        <strong class="text-danger">Permanent Deletion</strong>
+                                        <div class="text-muted small">
+                                            Payment will be permanently removed from the database.
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <span asp-validation-for="HardDelete" class="text-danger"></span>
+                        
+                        <div class="mt-2">
+                            <div class="alert alert-info" id="deletionInfo">
+                                <small>
+                                    <i class="bi bi-info-circle"></i>
+                                    <span id="deletionDescription">Payment will be removed from the system.</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Deletion Reason -->
+                    <div class="mb-4">
+                        <label asp-for="Reason" class="form-label fw-bold required">Reason for Deletion</label>
+                        <textarea asp-for="Reason" class="form-control" rows="4" required
+                                  placeholder="Please provide a detailed reason for deleting this payment..."></textarea>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                        <div class="form-text">
+                            <span id="reasonCount">0</span>/500 characters
+                        </div>
+                    </div>
+
+                    <!-- Confirmation Checkbox -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmDeletion" required>
+                            <label class="form-check-label" for="confirmDeletion">
+                                <strong>I understand that this action cannot be undone and confirm the deletion of this payment.</strong>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                            <i class="bi bi-trash"></i>
+                            <span id="deleteButtonText">Delete Payment</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Information Panel -->
+    <div class="col-lg-4">
+        <!-- Warning Information -->
+        <div class="card border-warning mb-3">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Important Warning
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="bi bi-x-circle text-danger"></i>
+                        <strong>This action is irreversible</strong>
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-exclamation-triangle text-warning"></i>
+                        Payment records will be lost
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-graph-down text-warning"></i>
+                        May affect financial reports
+                    </li>
+                    <li class="mb-0">
+                        <i class="bi bi-file-earmark-x text-danger"></i>
+                        Transaction history will be removed
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Alternative Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-warning"></i>
+                    Consider These Alternatives
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    @if (Model.PaymentStatus == PaymentStatus.Completed)
+                    {
+                        <button type="button" class="btn btn-outline-info btn-sm" 
+                                onclick="window.open('@Url.Action("Details", new { id = Model.Id })', '_blank')">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            Process Refund Instead
+                        </button>
+                    }
+                    @if (Model.PaymentStatus != PaymentStatus.Failed)
+                    {
+                        <button type="button" class="btn btn-outline-warning btn-sm" 
+                                onclick="if(confirm('Mark payment as failed?')) { changeStatus(@Model.Id, @((int)PaymentStatus.Failed)) }">
+                            <i class="bi bi-x-circle"></i>
+                            Mark as Failed
+                        </button>
+                    }
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                        Edit Payment Details
+                    </a>
+                    <a href="mailto:@Model.UserEmail?subject=Payment%20#@Model.Id%20Issue&body=Dear%20@Model.UserName,%0A%0ARegarding%20your%20payment%20#@Model.Id..." 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-envelope"></i>
+                        Contact Customer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            const reasonTextarea = $('textarea[name="Reason"]');
+            const reasonCount = $('#reasonCount');
+            const confirmCheckbox = $('#confirmDeletion');
+            const deleteButton = $('#deleteButton');
+            const deleteButtonText = $('#deleteButtonText');
+            const deletionInfo = $('#deletionInfo');
+            const deletionDescription = $('#deletionDescription');
+            const hardDeleteRadio = $('input[name="HardDelete"]');
+
+            // Character counter for reason
+            reasonTextarea.on('input', function() {
+                const length = $(this).val().length;
+                reasonCount.text(length);
+                
+                if (length > 500) {
+                    reasonCount.addClass('text-danger');
+                } else if (length > 400) {
+                    reasonCount.addClass('text-warning').removeClass('text-danger');
+                } else {
+                    reasonCount.removeClass('text-danger text-warning');
+                }
+                
+                updateDeleteButton();
+            });
+
+            // Confirmation checkbox handler
+            confirmCheckbox.on('change', function() {
+                updateDeleteButton();
+            });
+
+            // Deletion type change handler
+            hardDeleteRadio.on('change', function() {
+                updateDeletionInfo();
+                updateDeleteButton();
+            });
+
+            // Update deletion info text
+            function updateDeletionInfo() {
+                const isHardDelete = $('input[name="HardDelete"]:checked').val() === 'true';
+                
+                if (isHardDelete) {
+                    deletionDescription.text('Payment will be permanently removed from the database and cannot be recovered.');
+                    deletionInfo.removeClass('alert-info').addClass('alert-danger');
+                } else {
+                    deletionDescription.text('Payment will be removed from the system.');
+                    deletionInfo.removeClass('alert-danger').addClass('alert-info');
+                }
+            }
+
+            // Update delete button state
+            function updateDeleteButton() {
+                const hasReason = reasonTextarea.val().trim().length > 0;
+                const isConfirmed = confirmCheckbox.is(':checked');
+                const reasonLength = reasonTextarea.val().length;
+                const isHardDelete = $('input[name="HardDelete"]:checked').val() === 'true';
+                
+                const canDelete = hasReason && isConfirmed && reasonLength <= 500;
+                
+                deleteButton.prop('disabled', !canDelete);
+                
+                if (isHardDelete) {
+                    deleteButtonText.text('Permanently Delete Payment');
+                    deleteButton.removeClass('btn-danger').addClass('btn-danger');
+                } else {
+                    deleteButtonText.text('Delete Payment');
+                    deleteButton.removeClass('btn-danger').addClass('btn-danger');
+                }
+            }
+
+            // Form submit confirmation
+            $('#deleteForm').on('submit', function(e) {
+                const isHardDelete = $('input[name="HardDelete"]:checked').val() === 'true';
+                const confirmationMessage = isHardDelete 
+                    ? 'Are you absolutely sure you want to PERMANENTLY delete this payment? This action cannot be undone!'
+                    : 'Are you sure you want to delete this payment?';
+                
+                if (!confirm(confirmationMessage)) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Show loading state
+                deleteButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Deleting...');
+            });
+
+            // Alternative action functions
+            window.changeStatus = function(paymentId, newStatus) {
+                $.post('@Url.Action("ChangeStatus")', {
+                    id: paymentId,
+                    newStatus: newStatus
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        window.location.href = '@Url.Action("Details", new { id = Model.Id })';
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                })
+                .fail(function() {
+                    alert('Error changing payment status');
+                });
+            };
+
+            // Initialize
+            updateDeletionInfo();
+            updateDeleteButton();
+            reasonTextarea.trigger('input');
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: #dc3545;
+        }
+        
+        .card.border-danger .card-header {
+            border-bottom: 1px solid #dc3545;
+        }
+        
+        .card.border-warning .card-header {
+            border-bottom: 1px solid #ffc107;
+        }
+        
+        .form-check-input:checked[value="true"] + .form-check-label {
+            color: #dc3545;
+        }
+        
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        
+        .alert-heading {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .list-unstyled li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        
+        .list-unstyled li i {
+            margin-top: 0.25rem;
+            flex-shrink: 0;
+        }
+    </style>
+}
+

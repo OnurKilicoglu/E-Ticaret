@@ -1,0 +1,421 @@
+@model ProductViewModel
+@{
+    ViewData["Title"] = "Create Product";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Products</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Create New</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-plus-circle text-primary"></i>
+            Create New Product
+        </h2>
+        <p class="text-muted">Add a new product to your inventory</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Back to Products
+        </a>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Create Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle text-primary"></i>
+                    Product Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row">
+                        <!-- Product Name -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Name" class="form-label required">Product Name</label>
+                            <input asp-for="Name" class="form-control" placeholder="Enter product name" maxlength="200" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <!-- SKU -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SKU" class="form-label">SKU</label>
+                            <input asp-for="SKU" class="form-control" placeholder="Product SKU (optional)" maxlength="100" />
+                            <div class="form-text">Stock Keeping Unit - unique identifier</div>
+                            <span asp-validation-for="SKU" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Category -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CategoryId" class="form-label required">Category</label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="Model.Categories">
+                                <option value="">Select a category</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Brand -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Brand" class="form-label">Brand</label>
+                            <input asp-for="Brand" class="form-control" placeholder="Product brand (optional)" maxlength="100" />
+                            <span asp-validation-for="Brand" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" 
+                                  placeholder="Enter product description (optional)" maxlength="1000"></textarea>
+                        <div class="form-text">Detailed description of the product</div>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <!-- Price -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Price" class="form-label required">Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Price" class="form-control" type="number" step="0.01" min="0.01" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+
+                        <!-- Discount Price -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DiscountPrice" class="form-label">Discount Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="DiscountPrice" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" />
+                            </div>
+                            <div class="form-text">Sale price (must be less than regular price)</div>
+                            <span asp-validation-for="DiscountPrice" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Stock Quantity -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="StockQuantity" class="form-label required">Stock Quantity</label>
+                            <input asp-for="StockQuantity" class="form-control" type="number" min="0" />
+                            <div class="form-text">Available quantity in inventory</div>
+                            <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Product Images Upload -->
+                    <div class="mb-3">
+                        <label asp-for="ImageFiles" class="form-label">Product Images</label>
+                        <input asp-for="ImageFiles" class="form-control" type="file" multiple accept="image/*" />
+                        <div class="form-text">
+                            Select multiple images for your product. Supported formats: JPG, PNG, GIF, WebP. Max size: 2MB per image.
+                        </div>
+                        <span asp-validation-for="ImageFiles" class="text-danger"></span>
+                    </div>
+
+                    <!-- Image Preview Container -->
+                    <div class="mb-3" id="imagePreviewContainer" style="display: none;">
+                        <label class="form-label">Image Previews</label>
+                        <div class="row" id="imagePreviews"></div>
+                        <div class="alert alert-info mt-2">
+                            <i class="bi bi-info-circle"></i>
+                            The first image will be set as the main product image automatically.
+                        </div>
+                    </div>
+
+                    <!-- Status Options -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Active Product
+                                </label>
+                            </div>
+                            <div class="form-text">Only active products are visible to customers</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsFeatured" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsFeatured" class="form-check-label">
+                                    Featured Product
+                                </label>
+                            </div>
+                            <div class="form-text">Featured products appear in special sections</div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i>
+                            Create Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Sidebar -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-warning"></i>
+                    Product Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-primary">
+                        <i class="bi bi-tag"></i>
+                        Product Naming
+                    </h6>
+                    <ul class="list-unstyled text-muted small">
+                        <li>• Use descriptive, searchable names</li>
+                        <li>• Include key features or benefits</li>
+                        <li>• Keep under 200 characters</li>
+                        <li>• Avoid special characters</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-primary">
+                        <i class="bi bi-upc-scan"></i>
+                        SKU Best Practices
+                    </h6>
+                    <ul class="list-unstyled text-muted small">
+                        <li>• Use consistent format (e.g., CAT-001-BLK)</li>
+                        <li>• Include category and variant codes</li>
+                        <li>• Keep it short but meaningful</li>
+                        <li>• Avoid spaces and special characters</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-primary">
+                        <i class="bi bi-currency-dollar"></i>
+                        Pricing Guidelines
+                    </h6>
+                    <ul class="list-unstyled text-muted small">
+                        <li>• Set competitive regular prices</li>
+                        <li>• Use discount prices for sales</li>
+                        <li>• Consider psychological pricing (e.g., $9.99)</li>
+                        <li>• Monitor competitor pricing</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-primary">
+                        <i class="bi bi-image"></i>
+                        Image Requirements
+                    </h6>
+                    <ul class="list-unstyled text-muted small">
+                        <li>• Use high-quality images (min 800x600px)</li>
+                        <li>• Recommended aspect ratio: 4:3 or 1:1</li>
+                        <li>• Use HTTPS URLs only</li>
+                        <li>• Supported formats: JPG, PNG, WebP</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <small>
+                        All fields can be edited later. Start with basic information 
+                        and enhance details over time.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Real-time product name validation
+            let nameTimeout;
+            $('#Name').on('input', function() {
+                clearTimeout(nameTimeout);
+                const name = $(this).val().trim();
+                const $feedback = $(this).siblings('.text-danger');
+                
+                if (name.length > 0) {
+                    nameTimeout = setTimeout(function() {
+                        $.get('@Url.Action("CheckProductName")', { name: name })
+                            .done(function(data) {
+                                if (!data.available) {
+                                    $feedback.text('A product with this name already exists.');
+                                    $feedback.show();
+                                } else {
+                                    $feedback.hide();
+                                }
+                            });
+                    }, 500);
+                }
+            });
+
+            // Real-time SKU validation
+            let skuTimeout;
+            $('#SKU').on('input', function() {
+                clearTimeout(skuTimeout);
+                const sku = $(this).val().trim();
+                const $feedback = $(this).siblings('.text-danger');
+                
+                if (sku.length > 0) {
+                    skuTimeout = setTimeout(function() {
+                        $.get('@Url.Action("CheckSku")', { sku: sku })
+                            .done(function(data) {
+                                if (!data.available) {
+                                    $feedback.text('A product with this SKU already exists.');
+                                    $feedback.show();
+                                } else {
+                                    $feedback.hide();
+                                }
+                            });
+                    }, 500);
+                }
+            });
+
+            // File upload preview functionality
+            $('#ImageFiles').on('change', function() {
+                const files = this.files;
+                const $container = $('#imagePreviewContainer');
+                const $previews = $('#imagePreviews');
+                
+                $previews.empty();
+                
+                if (files.length > 0) {
+                    $container.show();
+                    
+                    Array.from(files).forEach((file, index) => {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const preview = `
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card">
+                                            <img src="${e.target.result}" class="card-img-top" style="height: 150px; object-fit: cover;">
+                                            <div class="card-body p-2">
+                                                <small class="text-muted">${file.name}</small>
+                                                <br>
+                                                <small class="text-muted">${(file.size / 1024).toFixed(1)} KB</small>
+                                                ${index === 0 ? '<br><span class="badge bg-primary">Main Image</span>' : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                $previews.append(preview);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                } else {
+                    $container.hide();
+                }
+            });
+
+            // Price validation
+            $('#DiscountPrice').on('input', function() {
+                const discountPrice = parseFloat($(this).val()) || 0;
+                const regularPrice = parseFloat($('#Price').val()) || 0;
+                const $feedback = $(this).siblings('.text-danger');
+                
+                if (discountPrice > 0 && regularPrice > 0 && discountPrice >= regularPrice) {
+                    $feedback.text('Discount price must be less than regular price.');
+                    $feedback.show();
+                } else {
+                    $feedback.hide();
+                }
+            });
+
+            // Character counter for description
+            $('#Description').on('input', function() {
+                const current = $(this).val().length;
+                const max = 1000;
+                const remaining = max - current;
+                
+                let $counter = $(this).siblings('.char-counter');
+                if ($counter.length === 0) {
+                    $counter = $('<div class="char-counter form-text text-end"></div>');
+                    $(this).after($counter);
+                }
+                
+                $counter.text(`${current}/${max} characters`);
+                $counter.toggleClass('text-warning', remaining < 100);
+                $counter.toggleClass('text-danger', remaining < 20);
+            });
+
+            // Auto-generate SKU suggestion
+            $('#Name, #CategoryId').on('input change', function() {
+                if ($('#SKU').val().trim() === '') {
+                    generateSkuSuggestion();
+                }
+            });
+
+            function generateSkuSuggestion() {
+                const productName = $('#Name').val().trim();
+                const categoryText = $('#CategoryId option:selected').text();
+                
+                if (productName.length > 2 && categoryText !== 'Select a category') {
+                    const namePrefix = productName.substring(0, 3).toUpperCase();
+                    const categoryPrefix = categoryText.substring(0, 3).toUpperCase();
+                    const randomNum = Math.floor(Math.random() * 999) + 1;
+                    const suggestion = `${categoryPrefix}-${namePrefix}-${randomNum.toString().padStart(3, '0')}`;
+                    
+                    $('#SKU').attr('placeholder', `Suggestion: ${suggestion}`);
+                }
+            }
+
+
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .char-counter {
+            font-size: 0.8rem;
+        }
+        
+        .form-text {
+            font-size: 0.875rem;
+        }
+    </style>
+}

@@ -1,0 +1,756 @@
+@model OrderDetailViewModel
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Orders</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.OrderNumber</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-receipt text-primary"></i>
+            Order Details
+            <span class="badge bg-@Model.StatusCssClass ms-2">@Model.StatusDisplayName</span>
+        </h2>
+        <p class="text-muted">
+            Order placed on @Model.OrderDate.ToString("MMMM dd, yyyy 'at' HH:mm")
+            @if (Model.LastUpdated.HasValue)
+            {
+                <span>• Last updated @Model.LastUpdated.Value.ToString("MMM dd, yyyy 'at' HH:mm")</span>
+            }
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="bi bi-pencil"></i>
+                Update Status
+            </a>
+            @if (Model.CanBeCancelled)
+            {
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">
+                    <i class="bi bi-x-circle"></i>
+                    Cancel Order
+                </a>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Orders
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["InfoMessage"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="bi bi-info-circle-fill"></i>
+        @TempData["InfoMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Order Summary Card -->
+    <div class="col-lg-8">
+        <!-- Order Summary -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-receipt"></i>
+                    Order Summary - @Model.OrderNumber
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Order Information</h6>
+                        <dl class="row">
+                            <dt class="col-sm-4">Order ID:</dt>
+                            <dd class="col-sm-8"><code>@Model.Id</code></dd>
+                            
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-@Model.StatusCssClass fs-6">
+                                    @Model.StatusDisplayName
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Items:</dt>
+                            <dd class="col-sm-8">@Model.ItemCount item(s) - @Model.TotalQuantity total qty</dd>
+                            
+                            <dt class="col-sm-4">Order Date:</dt>
+                            <dd class="col-sm-8">@Model.OrderDate.ToString("MMM dd, yyyy HH:mm")</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Order Total</h6>
+                        <dl class="row">
+                            <dt class="col-sm-6">Subtotal:</dt>
+                            <dd class="col-sm-6">@Model.SubTotal.ToString("C")</dd>
+                            
+                            @if (Model.TaxAmount > 0)
+                            {
+                                <dt class="col-sm-6">Tax:</dt>
+                                <dd class="col-sm-6">@Model.TaxAmount.ToString("C")</dd>
+                            }
+                            
+                            @if (Model.ShippingCost > 0)
+                            {
+                                <dt class="col-sm-6">Shipping:</dt>
+                                <dd class="col-sm-6">@Model.ShippingCost.ToString("C")</dd>
+                            }
+                            
+                            @if (Model.DiscountAmount > 0)
+                            {
+                                <dt class="col-sm-6">Discount:</dt>
+                                <dd class="col-sm-6 text-success">-@Model.DiscountAmount.ToString("C")</dd>
+                            }
+                            
+                            <dt class="col-sm-6"><strong>Total:</strong></dt>
+                            <dd class="col-sm-6"><strong class="text-primary">@Model.TotalAmount.ToString("C")</strong></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabbed Content -->
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="orderDetailTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items"
+                                type="button" role="tab" aria-controls="items" aria-selected="true">
+                            <i class="bi bi-box-seam"></i>
+                            Order Items (@Model.ItemCount)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping"
+                                type="button" role="tab" aria-controls="shipping" aria-selected="false">
+                            <i class="bi bi-truck"></i>
+                            Shipping Address
+                        </button>
+                    </li>
+                    @if (Model.Payment != null)
+                    {
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment"
+                                    type="button" role="tab" aria-controls="payment" aria-selected="false">
+                                <i class="bi bi-credit-card"></i>
+                                Payment Details
+                            </button>
+                        </li>
+                    }
+                    @if (Model.StatusHistory.Any())
+                    {
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history"
+                                    type="button" role="tab" aria-controls="history" aria-selected="false">
+                                <i class="bi bi-clock-history"></i>
+                                Status History
+                            </button>
+                        </li>
+                    }
+                    @if (Model.AdminNotes.Any())
+                    {
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes"
+                                    type="button" role="tab" aria-controls="notes" aria-selected="false">
+                                <i class="bi bi-sticky"></i>
+                                Admin Notes (@Model.AdminNotes.Count)
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="orderDetailTabsContent">
+                    <!-- Order Items Tab -->
+                    <div class="tab-pane fade show active" id="items" role="tabpanel" aria-labelledby="items-tab">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">Product</th>
+                                        <th scope="col" class="text-center">SKU</th>
+                                        <th scope="col" class="text-center">Quantity</th>
+                                        <th scope="col" class="text-end">Unit Price</th>
+                                        <th scope="col" class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.OrderItems)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(item.ProductImageUrl))
+                                                    {
+                                                        <img src="@item.ProductImageUrl" alt="@item.ProductName" 
+                                                             class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center"
+                                                             style="width: 50px; height: 50px;">
+                                                            <i class="bi bi-image text-muted"></i>
+                                                        </div>
+                                                    }
+                                                    <div>
+                                                        <h6 class="mb-1">@item.ProductName</h6>
+                                                        <small class="text-muted">@item.CategoryName</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                @if (!string.IsNullOrEmpty(item.ProductSku))
+                                                {
+                                                    <code>@item.ProductSku</code>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">N/A</span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-light text-dark border">@item.Quantity</span>
+                                            </td>
+                                            <td class="text-end">@item.UnitPrice.ToString("C")</td>
+                                            <td class="text-end fw-bold">@item.TotalPrice.ToString("C")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="4" class="text-end fw-bold">Order Total:</td>
+                                        <td class="text-end fw-bold text-primary">@Model.TotalAmount.ToString("C")</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Address Tab -->
+                    <div class="tab-pane fade" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
+                        @if (Model.ShippingAddress != null)
+                        {
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-geo-alt text-primary"></i>
+                                        Shipping Address
+                                    </h6>
+                                    <address class="mb-0">
+                                        <strong>@Model.Customer.FullName</strong><br>
+                                        @Model.ShippingAddress.AddressLine<br>
+                                        @Model.ShippingAddress.City, @Model.ShippingAddress.ZipCode<br>
+                                        @Model.ShippingAddress.Country
+                                    </address>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-person text-primary"></i>
+                                        Customer Information
+                                    </h6>
+                                    <dl>
+                                        <dt>Name:</dt>
+                                        <dd>@Model.Customer.FullName</dd>
+                                        
+                                        <dt>Email:</dt>
+                                        <dd><a href="mailto:@Model.Customer.Email">@Model.Customer.Email</a></dd>
+                                        
+                                        <dt>Customer Since:</dt>
+                                        <dd>@Model.Customer.RegistrationDate.ToString("MMM yyyy")</dd>
+                                        
+                                        @if (Model.Customer.TotalOrders > 0)
+                                        {
+                                            <dt>Total Orders:</dt>
+                                            <dd>@Model.Customer.TotalOrders</dd>
+                                            
+                                            <dt>Total Spent:</dt>
+                                            <dd>@Model.Customer.TotalSpent.ToString("C")</dd>
+                                        }
+                                    </dl>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <i class="bi bi-geo-alt display-4 text-muted"></i>
+                                <h5 class="mt-3">No Shipping Address</h5>
+                                <p class="text-muted">This order doesn't have a shipping address.</p>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Payment Details Tab -->
+                    @if (Model.Payment != null)
+                    {
+                        <div class="tab-pane fade" id="payment" role="tabpanel" aria-labelledby="payment-tab">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-credit-card text-primary"></i>
+                                        Payment Information
+                                    </h6>
+                                    <dl class="row">
+                                        <dt class="col-sm-5">Payment Method:</dt>
+                                        <dd class="col-sm-7">
+                                            <span class="badge bg-info">@Model.Payment.PaymentMethodDisplayName</span>
+                                        </dd>
+                                        
+                                        <dt class="col-sm-5">Payment Status:</dt>
+                                        <dd class="col-sm-7">
+                                            <span class="badge bg-@Model.Payment.PaymentStatusCssClass">
+                                                @Model.Payment.PaymentStatusDisplayName
+                                            </span>
+                                        </dd>
+                                        
+                                        <dt class="col-sm-5">Amount:</dt>
+                                        <dd class="col-sm-7 fw-bold">@Model.Payment.Amount.ToString("C")</dd>
+                                        
+                                        <dt class="col-sm-5">Payment Date:</dt>
+                                        <dd class="col-sm-7">@Model.Payment.PaymentDate.ToString("MMM dd, yyyy HH:mm")</dd>
+                                        
+                                        @if (!string.IsNullOrEmpty(Model.Payment.TransactionId))
+                                        {
+                                            <dt class="col-sm-5">Transaction ID:</dt>
+                                            <dd class="col-sm-7"><code>@Model.Payment.TransactionId</code></dd>
+                                        }
+                                    </dl>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-shield-check text-success"></i>
+                                        Payment Actions
+                                    </h6>
+                                    @if (Model.CanBeRefunded)
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle"></i>
+                                            This payment can be refunded.
+                                        </div>
+                                        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#refundModal">
+                                            <i class="bi bi-arrow-return-left"></i>
+                                            Process Refund
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-secondary">
+                                            <i class="bi bi-info-circle"></i>
+                                            No refund actions available for this payment.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Status History Tab -->
+                    @if (Model.StatusHistory.Any())
+                    {
+                        <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+                            <div class="timeline">
+                                @foreach (var history in Model.StatusHistory.OrderByDescending(h => h.ChangedDate))
+                                {
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker bg-@GetStatusCssClass(history.ToStatus)"></div>
+                                        <div class="timeline-content">
+                                            <h6 class="mb-1">
+                                                Status changed to <span class="badge bg-@GetStatusCssClass(history.ToStatus)">@history.ToStatus</span>
+                                            </h6>
+                                            <p class="text-muted mb-1">
+                                                @history.ChangedDate.ToString("MMMM dd, yyyy 'at' HH:mm")
+                                                @if (!string.IsNullOrEmpty(history.AdminUserName))
+                                                {
+                                                    <span>by @history.AdminUserName</span>
+                                                }
+                                            </p>
+                                            @if (!string.IsNullOrEmpty(history.Notes))
+                                            {
+                                                <div class="alert alert-light">
+                                                    <small>@history.Notes</small>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Admin Notes Tab -->
+                    @if (Model.AdminNotes.Any())
+                    {
+                        <div class="tab-pane fade" id="notes" role="tabpanel" aria-labelledby="notes-tab">
+                            @foreach (var note in Model.AdminNotes.OrderByDescending(n => n.CreatedDate))
+                            {
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <p class="mb-2">@note.Note</p>
+                                                <small class="text-muted">
+                                                    @note.CreatedDate.ToString("MMM dd, yyyy 'at' HH:mm")
+                                                    @if (!string.IsNullOrEmpty(note.AdminUserName))
+                                                    {
+                                                        <span>by @note.AdminUserName</span>
+                                                    }
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightning text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    @if (Model.AvailableStatuses.Any())
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-arrow-up-circle"></i>
+                                Update Status
+                            </button>
+                            <ul class="dropdown-menu w-100">
+                                @foreach (var status in Model.AvailableStatuses)
+                                {
+                                    <li>
+                                        <button class="dropdown-item quick-status-update" 
+                                                data-order-id="@Model.Id" 
+                                                data-new-status="@status.Value">
+                                            @status.Text
+                                        </button>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil"></i>
+                        Edit Order Status
+                    </a>
+                    
+                    @if (Model.CanBeCancelled)
+                    {
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">
+                            <i class="bi bi-x-circle"></i>
+                            Cancel Order
+                        </a>
+                    }
+                    
+                    <hr>
+                    
+                    <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#addNoteModal">
+                        <i class="bi bi-sticky"></i>
+                        Add Admin Note
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                        <i class="bi bi-printer"></i>
+                        Print Order
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Summary -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-person text-info"></i>
+                    Customer Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
+                         style="width: 60px; height: 60px;">
+                        <i class="bi bi-person-fill text-white fs-4"></i>
+                    </div>
+                    <h6 class="mt-2 mb-0">@Model.Customer.FullName</h6>
+                    <small class="text-muted">@Model.Customer.Email</small>
+                </div>
+                
+                <dl class="row small">
+                    <dt class="col-6">Customer ID:</dt>
+                    <dd class="col-6">@Model.Customer.Id</dd>
+                    
+                    <dt class="col-6">Registered:</dt>
+                    <dd class="col-6">@Model.Customer.RegistrationDate.ToString("MMM yyyy")</dd>
+                    
+                    @if (Model.Customer.TotalOrders > 0)
+                    {
+                        <dt class="col-6">Total Orders:</dt>
+                        <dd class="col-6">@Model.Customer.TotalOrders</dd>
+                        
+                        <dt class="col-6">Total Spent:</dt>
+                        <dd class="col-6">@Model.Customer.TotalSpent.ToString("C")</dd>
+                    }
+                </dl>
+                
+                <div class="d-grid">
+                    <a href="#" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-person-lines-fill"></i>
+                        View Customer Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Admin Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addNoteForm">
+                    <div class="mb-3">
+                        <label for="noteText" class="form-label">Note</label>
+                        <textarea class="form-control" id="noteText" rows="3" placeholder="Enter admin note..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addNote()">Add Note</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Refund Modal -->
+@if (Model.CanBeRefunded)
+{
+    <div class="modal fade" id="refundModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Process Refund</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="refundForm">
+                        <div class="mb-3">
+                            <label for="refundAmount" class="form-label">Refund Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="refundAmount" 
+                                       value="@Model.TotalAmount" step="0.01" max="@Model.TotalAmount">
+                            </div>
+                            <div class="form-text">Maximum refund amount: @Model.TotalAmount.ToString("C")</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="refundReason" class="form-label">Refund Reason</label>
+                            <textarea class="form-control" id="refundReason" rows="3" placeholder="Enter refund reason..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="processRefund()">Process Refund</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Quick status update functionality
+            $('.quick-status-update').on('click', function(e) {
+                e.preventDefault();
+                const orderId = $(this).data('order-id');
+                const newStatus = $(this).data('new-status');
+                
+                if (confirm(`Change order status to ${newStatus}?`)) {
+                    updateOrderStatus(orderId, newStatus);
+                }
+            });
+        });
+
+        function updateOrderStatus(orderId, newStatus) {
+            $.post('@Url.Action("UpdateStatus")', {
+                orderId: orderId,
+                newStatus: newStatus
+            })
+            .done(function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            })
+            .fail(function() {
+                alert('Error updating order status');
+            });
+        }
+
+        function addNote() {
+            const noteText = $('#noteText').val().trim();
+            if (!noteText) {
+                alert('Please enter a note');
+                return;
+            }
+
+            $.post('@Url.Action("AddNote")', {
+                orderId: @Model.Id,
+                note: noteText
+            })
+            .done(function(response) {
+                if (response.success) {
+                    $('#addNoteModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            })
+            .fail(function() {
+                alert('Error adding note');
+            });
+        }
+
+        function processRefund() {
+            const amount = $('#refundAmount').val();
+            const reason = $('#refundReason').val().trim();
+            
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid refund amount');
+                return;
+            }
+            
+            if (!reason) {
+                alert('Please enter a refund reason');
+                return;
+            }
+
+            if (confirm(`Process refund of $${amount}?`)) {
+                $.post('@Url.Action("ProcessRefund")', {
+                    orderId: @Model.Id,
+                    amount: amount,
+                    reason: reason
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        $('#refundModal').modal('hide');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                })
+                .fail(function() {
+                    alert('Error processing refund');
+                });
+            }
+        }
+    </script>
+
+    <style>
+        .timeline {
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: -10px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #dee2e6;
+        }
+        
+        .timeline-item:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: -1px;
+            top: 20px;
+            width: 2px;
+            height: calc(100% + 20px);
+            background-color: #dee2e6;
+        }
+        
+        @@media print {
+            .btn, .nav-tabs, .modal { display: none !important; }
+            .tab-content .tab-pane { display: block !important; opacity: 1 !important; }
+        }
+    </style>
+}
+
+@functions {
+    private string GetStatusCssClass(ECommerce.Core.Entities.OrderStatus status)
+    {
+        return status switch
+        {
+            ECommerce.Core.Entities.OrderStatus.Pending => "warning",
+            ECommerce.Core.Entities.OrderStatus.Processing => "info",
+            ECommerce.Core.Entities.OrderStatus.Shipped => "primary",
+            ECommerce.Core.Entities.OrderStatus.Delivered => "success",
+            ECommerce.Core.Entities.OrderStatus.Cancelled => "danger",
+            ECommerce.Core.Entities.OrderStatus.Returned => "secondary",
+            _ => "light"
+        };
+    }
+}

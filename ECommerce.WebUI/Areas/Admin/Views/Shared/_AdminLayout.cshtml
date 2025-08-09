@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - E-Commerce Admin Panel</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ECommerce.WebUI.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    @await RenderSectionAsync("Styles", required: false)
+    
+    <style>
+        .admin-sidebar {
+            min-height: 100vh;
+            background-color: #212529;
+            padding-top: 1rem;
+        }
+
+        .admin-sidebar .nav-link {
+            color: #adb5bd;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            margin: 0.125rem 0.5rem;
+        }
+
+        .admin-sidebar .nav-link:hover {
+            color: #ffffff;
+            background-color: #495057;
+        }
+
+        .admin-sidebar .nav-link.active {
+            color: #ffffff;
+            background-color: #0d6efd;
+        }
+
+        .admin-sidebar .nav-link i {
+            margin-right: 0.5rem;
+        }
+
+        /* Compact Sidebar Styles */
+        .compact-sidebar .nav-item {
+            margin-bottom: 0;
+        }
+
+        .compact-sidebar .nav-link {
+            padding: 0.5rem 1rem;
+            margin: 0.125rem 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .compact-sidebar .sidebar-heading {
+            font-size: 0.75rem;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .compact-sidebar .nav-item:first-child .sidebar-heading {
+            margin-top: 0.5rem;
+        }
+
+        .compact-sidebar hr {
+            margin: 0.5rem 0;
+            opacity: 0.3;
+        }
+
+        .admin-content {
+            padding: 2rem;
+        }
+
+        .admin-header {
+            background-color: #ffffff;
+            border-bottom: 1px solid #dee2e6;
+            padding: 1rem 2rem;
+        }
+
+        .breadcrumb-item+.breadcrumb-item::before {
+            content: ">";
+        }
+
+        .card-stats {
+            border: none;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .card-stats .card-body {
+            padding: 1.5rem;
+        }
+
+        .stats-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block admin-sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <!-- Admin Brand -->
+                    <div class="text-center mb-4">
+                        <h4 class="text-white">
+                            <i class="bi bi-shop text-primary"></i>
+                            E-Commerce
+                        </h4>
+                        <small class="text-muted">Admin Panel</small>
+                    </div>
+
+                    <!-- Navigation Menu -->
+                    <ul class="nav flex-column compact-sidebar">
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")"
+                                asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <h6 class="sidebar-heading text-muted text-uppercase px-3">
+                                Catalog Management
+                            </h6>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")"
+                                asp-area="Admin" asp-controller="Category" asp-action="Index">
+                                <i class="bi bi-tags me-2"></i>Categories
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")"
+                                asp-area="Admin" asp-controller="Product" asp-action="Index">
+                                <i class="bi bi-box-seam me-2"></i>Products
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <h6 class="sidebar-heading text-muted text-uppercase px-3">
+                                Order Management
+                            </h6>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Order" ? "active" : "")"
+                                asp-area="Admin" asp-controller="Order" asp-action="Index">
+                                <i class="bi bi-bag-check me-2"></i>Orders
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Payment" ? "active" : "")"
+                                asp-area="Admin" asp-controller="Payment" asp-action="Index">
+                                <i class="bi bi-credit-card me-2"></i>Payments
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <h6 class="sidebar-heading text-muted text-uppercase px-3">
+                                User Management
+                            </h6>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")"
+                                asp-area="Admin" asp-controller="User" asp-action="Index">
+                                <i class="bi bi-people me-2"></i>Users
+                            </a>
+                        </li>
+
+                       
+
+                        <li class="nav-item">
+                            <h6 class="sidebar-heading text-muted text-uppercase px-3">
+                                Content Management
+                            </h6>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Slider" ? "active" : "")"
+                                asp-area="Admin" asp-controller="Slider" asp-action="Index">
+                                <i class="bi bi-images me-2"></i>Sliders
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "BlogPost" ? "active" : "")"
+                                asp-area="Admin" asp-controller="BlogPost" asp-action="Index">
+                                <i class="bi bi-journal-text me-2"></i>Blog Posts
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "FAQ" ? "active" : "")"
+                                asp-area="Admin" asp-controller="FAQ" asp-action="Index">
+                                <i class="bi bi-question-circle me-2"></i>FAQs
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "FAQCategory" ? "active" : "")"
+                                asp-area="Admin" asp-controller="FAQCategory" asp-action="Index">
+                                <i class="bi bi-tags me-2"></i>FAQ Categories
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ContactMessage" ? "active" : "")"
+                                asp-area="Admin" asp-controller="ContactMessage" asp-action="Index">
+                                <i class="bi bi-envelope me-2"></i>Contact Messages
+                            </a>
+                        </li>
+
+                        
+
+                        <li class="nav-item">
+                            <hr class="text-muted">
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-globe me-2"></i>View Website
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="return confirm('Are you sure you want to logout?')">
+                                <i class="bi bi-box-arrow-right me-2"></i>Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-0">
+                <!-- Header -->
+                <div class="admin-header d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+                    <div>
+                        <h1 class="h2">@ViewData["Title"]</h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item">
+                                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin</a>
+                                </li>
+                                @if (ViewContext.RouteData.Values["controller"]?.ToString() != "Dashboard")
+                                {
+                                    <li class="breadcrumb-item active" aria-current="page">
+                                        @ViewContext.RouteData.Values["controller"]
+                                    </li>
+                                }
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <span class="text-muted">
+                                <i class="bi bi-person-circle"></i>
+                                Welcome, Admin
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="admin-content">
+                    @RenderBody()
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

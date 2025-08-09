@@ -1,0 +1,696 @@
+@model ContactMessageListViewModel
+@{
+    ViewData["Title"] = "Contact Messages";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Contact Messages</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-envelope text-primary"></i>
+            Contact Messages
+            @if (Model.Statistics.UnreadMessages > 0)
+            {
+                <span class="badge bg-warning ms-2">@Model.Statistics.UnreadMessages unread</span>
+            }
+        </h2>
+        <p class="text-muted">Manage customer inquiries and support requests</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-success" id="bulkMarkReadBtn" disabled>
+                <i class="bi bi-envelope-open"></i>
+                Mark Read
+            </button>
+            <button type="button" class="btn btn-outline-warning" id="bulkMarkUnreadBtn" disabled>
+                <i class="bi bi-envelope"></i>
+                Mark Unread
+            </button>
+            <button type="button" class="btn btn-outline-danger" id="bulkDeleteBtn" disabled>
+                <i class="bi bi-trash"></i>
+                Delete
+            </button>
+            <a asp-action="Export" class="btn btn-outline-info" 
+               asp-route-searchTerm="@Model.SearchTerm"
+               asp-route-email="@Model.Email"
+               asp-route-isRead="@Model.IsRead"
+               asp-route-isReplied="@Model.IsReplied"
+               asp-route-startDate="@Model.StartDate"
+               asp-route-endDate="@Model.EndDate">
+                <i class="bi bi-download"></i>
+                Export CSV
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card card-stats bg-gradient-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon bg-white text-primary">
+                        <i class="bi bi-envelope-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h3 class="mb-0">@Model.Statistics.TotalMessages</h3>
+                        <p class="mb-0">Total Messages</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-stats bg-gradient-warning text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon bg-white text-warning">
+                        <i class="bi bi-envelope"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h3 class="mb-0">@Model.Statistics.UnreadMessages</h3>
+                        <p class="mb-0">Unread</p>
+                        <small>@Model.Statistics.UnreadPercentageFormatted</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-stats bg-gradient-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon bg-white text-info">
+                        <i class="bi bi-reply-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h3 class="mb-0">@Model.Statistics.RepliedMessages</h3>
+                        <p class="mb-0">Replied</p>
+                        <small>@Model.Statistics.ReplyPercentageFormatted</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-stats bg-gradient-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon bg-white text-success">
+                        <i class="bi bi-calendar-day"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h3 class="mb-0">@Model.Statistics.TodayMessages</h3>
+                        <p class="mb-0">Today</p>
+                        <small>Avg: @Model.Statistics.AverageMessagesPerDayFormatted/day</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-funnel text-primary"></i>
+            Search & Filter
+            @if (Model.HasFilters)
+            {
+                <span class="badge bg-primary ms-2">Active</span>
+            }
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="Index">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="searchTerm" class="form-label">Search</label>
+                    <input asp-for="SearchTerm" class="form-control" placeholder="Name, email, subject, or message...">
+                </div>
+                <div class="col-md-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" placeholder="Specific email address...">
+                </div>
+                <div class="col-md-2">
+                    <label for="isRead" class="form-label">Read Status</label>
+                    <select asp-for="IsRead" class="form-select" asp-items="Model.ReadStatusOptions"></select>
+                </div>
+                <div class="col-md-2">
+                    <label for="isReplied" class="form-label">Reply Status</label>
+                    <select asp-for="IsReplied" class="form-select" asp-items="Model.ReplyStatusOptions"></select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary d-block w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input asp-for="StartDate" type="date" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input asp-for="EndDate" type="date" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="pageSize" class="form-label">Items per page</label>
+                    <select asp-for="PageSize" class="form-select">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    @if (Model.HasFilters)
+                    {
+                        <a asp-action="Index" class="btn btn-outline-secondary me-2">
+                            <i class="bi bi-x-circle"></i>
+                            Clear Filters
+                        </a>
+                    }
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-funnel"></i>
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Messages Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-list-ul text-primary"></i>
+            Contact Messages (@Model.TotalItems total)
+        </h5>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="selectAll">
+            <label class="form-check-label" for="selectAll">
+                Select All
+            </label>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Messages.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="40">
+                                <input type="checkbox" id="selectAllHeader">
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortBy="name" asp-route-sortOrder="@Model.GetNextSortOrder("name")"
+                                   asp-route-searchTerm="@Model.SearchTerm" asp-route-email="@Model.Email" 
+                                   asp-route-isRead="@Model.IsRead" asp-route-isReplied="@Model.IsReplied"
+                                   asp-route-startDate="@Model.StartDate" asp-route-endDate="@Model.EndDate"
+                                   asp-route-page="@Model.CurrentPage" asp-route-pageSize="@Model.PageSize"
+                                   class="text-decoration-none">
+                                    Name <i class="bi @Model.GetSortIcon("name")"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortBy="email" asp-route-sortOrder="@Model.GetNextSortOrder("email")"
+                                   asp-route-searchTerm="@Model.SearchTerm" asp-route-email="@Model.Email" 
+                                   asp-route-isRead="@Model.IsRead" asp-route-isReplied="@Model.IsReplied"
+                                   asp-route-startDate="@Model.StartDate" asp-route-endDate="@Model.EndDate"
+                                   asp-route-page="@Model.CurrentPage" asp-route-pageSize="@Model.PageSize"
+                                   class="text-decoration-none">
+                                    Email <i class="bi @Model.GetSortIcon("email")"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortBy="subject" asp-route-sortOrder="@Model.GetNextSortOrder("subject")"
+                                   asp-route-searchTerm="@Model.SearchTerm" asp-route-email="@Model.Email" 
+                                   asp-route-isRead="@Model.IsRead" asp-route-isReplied="@Model.IsReplied"
+                                   asp-route-startDate="@Model.StartDate" asp-route-endDate="@Model.EndDate"
+                                   asp-route-page="@Model.CurrentPage" asp-route-pageSize="@Model.PageSize"
+                                   class="text-decoration-none">
+                                    Subject <i class="bi @Model.GetSortIcon("subject")"></i>
+                                </a>
+                            </th>
+                            <th>Message Preview</th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortBy="isread" asp-route-sortOrder="@Model.GetNextSortOrder("isread")"
+                                   asp-route-searchTerm="@Model.SearchTerm" asp-route-email="@Model.Email" 
+                                   asp-route-isRead="@Model.IsRead" asp-route-isReplied="@Model.IsReplied"
+                                   asp-route-startDate="@Model.StartDate" asp-route-endDate="@Model.EndDate"
+                                   asp-route-page="@Model.CurrentPage" asp-route-pageSize="@Model.PageSize"
+                                   class="text-decoration-none">
+                                    Status <i class="bi @Model.GetSortIcon("isread")"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortBy="createdDate" asp-route-sortOrder="@Model.GetNextSortOrder("createdDate")"
+                                   asp-route-searchTerm="@Model.SearchTerm" asp-route-email="@Model.Email" 
+                                   asp-route-isRead="@Model.IsRead" asp-route-isReplied="@Model.IsReplied"
+                                   asp-route-startDate="@Model.StartDate" asp-route-endDate="@Model.EndDate"
+                                   asp-route-page="@Model.CurrentPage" asp-route-pageSize="@Model.PageSize"
+                                   class="text-decoration-none">
+                                    Date <i class="bi @Model.GetSortIcon("createdDate")"></i>
+                                </a>
+                            </th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var message in Model.Messages)
+                        {
+                            <tr class="@(!message.IsRead ? "table-warning" : "")" data-message-id="@message.Id">
+                                <td>
+                                    <input type="checkbox" class="message-checkbox" value="@message.Id">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi @message.ReadStatusIcon me-2 text-@message.ReadStatusCssClass"></i>
+                                        <strong>@message.Name</strong>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(message.PhoneNumber))
+                                    {
+                                        <small class="text-muted d-block">
+                                            <i class="bi bi-telephone"></i> @message.PhoneNumber
+                                        </small>
+                                    }
+                                </td>
+                                <td>
+                                    <a href="mailto:@message.Email" class="text-decoration-none">
+                                        @message.Email
+                                    </a>
+                                </td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@message.Id" class="text-decoration-none">
+                                        <strong>@message.TruncatedSubject</strong>
+                                    </a>
+                                    @if (message.IsReplied)
+                                    {
+                                        <span class="badge bg-info ms-1">
+                                            <i class="bi bi-reply-fill"></i> Replied
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="text-muted small">
+                                        @message.TruncatedMessage
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@message.ReadStatusCssClass">
+                                        <i class="bi @message.ReadStatusIcon"></i>
+                                        @message.ReadStatusDisplayName
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        @message.CreatedDate.ToString("MMM dd, yyyy")
+                                        <br>
+                                        <span class="text-muted">@message.TimeAgo</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a asp-action="Details" asp-route-id="@message.Id" 
+                                           class="btn btn-outline-info" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-@(message.IsRead ? "warning" : "success") toggle-read-status" 
+                                                data-message-id="@message.Id" 
+                                                title="@(message.IsRead ? "Mark as Unread" : "Mark as Read")">
+                                            <i class="bi @(message.IsRead ? "bi-envelope" : "bi-envelope-open")"></i>
+                                        </button>
+                                        <a asp-action="Delete" asp-route-id="@message.Id" 
+                                           class="btn btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <nav aria-label="Contact messages pagination">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)"
+                                   asp-route-searchTerm="@Model.SearchTerm" asp-route-email="@Model.Email" 
+                                   asp-route-isRead="@Model.IsRead" asp-route-isReplied="@Model.IsReplied"
+                                   asp-route-startDate="@Model.StartDate" asp-route-endDate="@Model.EndDate"
+                                   asp-route-sortBy="@Model.SortBy" asp-route-sortOrder="@Model.SortOrder"
+                                   asp-route-pageSize="@Model.PageSize">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            @{
+                                var startPage = Math.Max(1, Model.CurrentPage - 2);
+                                var endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+                            }
+
+                            @if (startPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="1"
+                                       asp-route-searchTerm="@Model.SearchTerm" asp-route-email="@Model.Email" 
+                                       asp-route-isRead="@Model.IsRead" asp-route-isReplied="@Model.IsReplied"
+                                       asp-route-startDate="@Model.StartDate" asp-route-endDate="@Model.EndDate"
+                                       asp-route-sortBy="@Model.SortBy" asp-route-sortOrder="@Model.SortOrder"
+                                       asp-route-pageSize="@Model.PageSize">1</a>
+                                </li>
+                                @if (startPage > 2)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                            }
+
+                            @for (int i = startPage; i <= endPage; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@i"
+                                       asp-route-searchTerm="@Model.SearchTerm" asp-route-email="@Model.Email" 
+                                       asp-route-isRead="@Model.IsRead" asp-route-isReplied="@Model.IsReplied"
+                                       asp-route-startDate="@Model.StartDate" asp-route-endDate="@Model.EndDate"
+                                       asp-route-sortBy="@Model.SortBy" asp-route-sortOrder="@Model.SortOrder"
+                                       asp-route-pageSize="@Model.PageSize">@i</a>
+                                </li>
+                            }
+
+                            @if (endPage < Model.TotalPages)
+                            {
+                                @if (endPage < Model.TotalPages - 1)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@Model.TotalPages"
+                                       asp-route-searchTerm="@Model.SearchTerm" asp-route-email="@Model.Email" 
+                                       asp-route-isRead="@Model.IsRead" asp-route-isReplied="@Model.IsReplied"
+                                       asp-route-startDate="@Model.StartDate" asp-route-endDate="@Model.EndDate"
+                                       asp-route-sortBy="@Model.SortBy" asp-route-sortOrder="@Model.SortOrder"
+                                       asp-route-pageSize="@Model.PageSize">@Model.TotalPages</a>
+                                </li>
+                            }
+
+                            <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)"
+                                   asp-route-searchTerm="@Model.SearchTerm" asp-route-email="@Model.Email" 
+                                   asp-route-isRead="@Model.IsRead" asp-route-isReplied="@Model.IsReplied"
+                                   asp-route-startDate="@Model.StartDate" asp-route-endDate="@Model.EndDate"
+                                   asp-route-sortBy="@Model.SortBy" asp-route-sortOrder="@Model.SortOrder"
+                                   asp-route-pageSize="@Model.PageSize">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            Showing @((Model.CurrentPage - 1) * Model.PageSize + 1) to @Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalItems) 
+                            of @Model.TotalItems messages
+                        </small>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-envelope-x text-muted" style="font-size: 3rem;"></i>
+                <h5 class="text-muted mt-3">No contact messages found</h5>
+                <p class="text-muted">
+                    @if (Model.HasFilters)
+                    {
+                        <span>Try adjusting your filters or </span>
+                        <a asp-action="Index" class="text-decoration-none">clear all filters</a>
+                    }
+                    else
+                    {
+                        <span>No contact messages have been received yet.</span>
+                    }
+                </p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Bulk Action Confirmation Modal -->
+<div class="modal fade" id="bulkActionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Bulk Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="bulkActionMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmBulkAction">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            var selectedIds = [];
+            var currentBulkAction = '';
+
+            // Handle select all checkbox
+            $('#selectAll, #selectAllHeader').on('change', function() {
+                var checked = $(this).prop('checked');
+                $('.message-checkbox').prop('checked', checked);
+                $('#selectAll, #selectAllHeader').prop('checked', checked);
+                updateSelectedIds();
+                updateBulkActionButtons();
+            });
+
+            // Handle individual checkbox selection
+            $('.message-checkbox').on('change', function() {
+                updateSelectedIds();
+                updateBulkActionButtons();
+                
+                var totalCheckboxes = $('.message-checkbox').length;
+                var checkedCheckboxes = $('.message-checkbox:checked').length;
+                $('#selectAll, #selectAllHeader').prop('checked', checkedCheckboxes === totalCheckboxes);
+            });
+
+            // Update selected IDs array
+            function updateSelectedIds() {
+                selectedIds = $('.message-checkbox:checked').map(function() {
+                    return parseInt($(this).val());
+                }).get();
+            }
+
+            // Update bulk action button states
+            function updateBulkActionButtons() {
+                var hasSelection = selectedIds.length > 0;
+                $('#bulkMarkReadBtn, #bulkMarkUnreadBtn, #bulkDeleteBtn').prop('disabled', !hasSelection);
+            }
+
+            // Bulk action handlers
+            $('#bulkMarkReadBtn').on('click', function() {
+                if (selectedIds.length === 0) return;
+                currentBulkAction = 'markread';
+                $('#bulkActionMessage').text(`Mark ${selectedIds.length} message(s) as read?`);
+                $('#bulkActionModal').modal('show');
+            });
+
+            $('#bulkMarkUnreadBtn').on('click', function() {
+                if (selectedIds.length === 0) return;
+                currentBulkAction = 'markunread';
+                $('#bulkActionMessage').text(`Mark ${selectedIds.length} message(s) as unread?`);
+                $('#bulkActionModal').modal('show');
+            });
+
+            $('#bulkDeleteBtn').on('click', function() {
+                if (selectedIds.length === 0) return;
+                currentBulkAction = 'delete';
+                $('#bulkActionMessage').text(`Move ${selectedIds.length} message(s) to trash? This action can be undone.`);
+                $('#bulkActionModal').modal('show');
+            });
+
+            // Confirm bulk action
+            $('#confirmBulkAction').on('click', function() {
+                performBulkAction(currentBulkAction, selectedIds);
+                $('#bulkActionModal').modal('hide');
+            });
+
+            // Perform bulk action
+            function performBulkAction(operation, ids) {
+                $.ajax({
+                    url: '@Url.Action("BulkOperation")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        selectedIds: ids,
+                        operation: operation
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error performing bulk operation');
+                    }
+                });
+            }
+
+            // Toggle read status
+            $('.toggle-read-status').on('click', function() {
+                var messageId = $(this).data('message-id');
+                var button = $(this);
+                
+                $.post('@Url.Action("ToggleReadStatus")', { id: messageId })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error updating message status');
+                    });
+            });
+
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Auto-refresh for new messages every 30 seconds
+            setInterval(function() {
+                // Only refresh if no filters are applied and on first page
+                if (!@Model.HasFilters.ToString().ToLower() && @Model.CurrentPage === 1) {
+                    $.get('@Url.Action("GetStatistics")')
+                        .done(function(response) {
+                            if (response.success && response.data.unreadMessages > @Model.Statistics.UnreadMessages) {
+                                // Show notification about new messages
+                                showNewMessageNotification(response.data.unreadMessages - @Model.Statistics.UnreadMessages);
+                            }
+                        });
+                }
+            }, 30000);
+
+            function showNewMessageNotification(newCount) {
+                var notification = $(`
+                    <div class="alert alert-info alert-dismissible fade show position-fixed" 
+                         style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                        <i class="bi bi-envelope-plus"></i>
+                        <strong>${newCount} new message(s) received!</strong>
+                        <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="location.reload()">
+                            Refresh
+                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `);
+                
+                $('body').append(notification);
+                
+                // Auto-remove after 10 seconds
+                setTimeout(function() {
+                    notification.alert('close');
+                }, 10000);
+            }
+        });
+    </script>
+
+    <style>
+        .table-warning {
+            background-color: rgba(255, 193, 7, 0.1) !important;
+        }
+        
+        .card-stats {
+            border: none;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+        }
+        
+        .bg-gradient-warning {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+        }
+        
+        .bg-gradient-info {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+        }
+        
+        .bg-gradient-success {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+        }
+        
+        .stats-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .message-checkbox {
+            cursor: pointer;
+        }
+        
+        .btn-group-sm .btn {
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+}
+

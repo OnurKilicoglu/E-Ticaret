@@ -1,0 +1,492 @@
+@model ProductViewModel
+@{
+    ViewData["Title"] = "Edit Product";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Products</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Edit: @Model.Name</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-pencil-square text-primary"></i>
+            Edit Product
+        </h2>
+        <p class="text-muted">Update product information and manage images</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                <i class="bi bi-eye"></i>
+                View Details
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Edit Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle text-primary"></i>
+                    Product Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data" novalidate>
+                    <input asp-for="Id" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row">
+                        <!-- Product Name -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Name" class="form-label required">Product Name</label>
+                            <input asp-for="Name" class="form-control" placeholder="Enter product name" maxlength="200" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <!-- SKU -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SKU" class="form-label">SKU</label>
+                            <input asp-for="SKU" class="form-control" placeholder="Product SKU (optional)" maxlength="100" />
+                            <div class="form-text">Stock Keeping Unit - unique identifier</div>
+                            <span asp-validation-for="SKU" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Category -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CategoryId" class="form-label required">Category</label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="Model.Categories">
+                                <option value="">Select a category</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Brand -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Brand" class="form-label">Brand</label>
+                            <input asp-for="Brand" class="form-control" placeholder="Product brand (optional)" maxlength="100" />
+                            <span asp-validation-for="Brand" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" 
+                                  placeholder="Enter product description (optional)" maxlength="1000"></textarea>
+                        <div class="form-text">Detailed description of the product</div>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <!-- Price -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Price" class="form-label required">Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Price" class="form-control" type="number" step="0.01" min="0.01" />
+                            </div>
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+
+                        <!-- Discount Price -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DiscountPrice" class="form-label">Discount Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="DiscountPrice" class="form-control" type="number" step="0.01" min="0" />
+                            </div>
+                            <div class="form-text">Sale price (must be less than regular price)</div>
+                            <span asp-validation-for="DiscountPrice" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Stock Quantity -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="StockQuantity" class="form-label required">Stock Quantity</label>
+                            <input asp-for="StockQuantity" class="form-control" type="number" min="0" />
+                            <div class="form-text">Available quantity in inventory</div>
+                            <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Status Options -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Active Product
+                                </label>
+                            </div>
+                            <div class="form-text">Only active products are visible to customers</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsFeatured" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsFeatured" class="form-check-label">
+                                    Featured Product
+                                </label>
+                            </div>
+                            <div class="form-text">Featured products appear in special sections</div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i>
+                            Update Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Product Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-graph-up text-success"></i>
+                    Product Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h5 class="text-primary mb-0">@Model.ViewCount</h5>
+                            <small class="text-muted">Views</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="@(Model.IsLowStock ? "text-warning" : "text-success") mb-0">@Model.StockQuantity</h5>
+                        <small class="text-muted">In Stock</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="d-flex justify-content-between small">
+                    <span class="text-muted">Created:</span>
+                    <span>@Model.CreatedDate.ToString("MMM dd, yyyy")</span>
+                </div>
+                
+                @if (Model.UpdatedDate.HasValue)
+                {
+                    <div class="d-flex justify-content-between small">
+                        <span class="text-muted">Updated:</span>
+                        <span>@Model.UpdatedDate.Value.ToString("MMM dd, yyyy")</span>
+                    </div>
+                }
+                
+                <div class="d-flex justify-content-between small">
+                    <span class="text-muted">Category:</span>
+                    <span class="fw-bold">@Model.CategoryName</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Management -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-images text-primary"></i>
+                    Image Management
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Current Images -->
+                @if (Model.ProductImages != null && Model.ProductImages.Any())
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Current Images</label>
+                        <div class="row" id="currentImages">
+                            @foreach (var image in Model.ProductImages.OrderBy(x => x.DisplayOrder))
+                            {
+                                <div class="col-6 mb-3" data-image-id="@image.Id">
+                                    <div class="card position-relative">
+                                        <img src="@image.ImageUrl" class="card-img-top" style="height: 120px; object-fit: cover;" alt="@image.AltText">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="MainImageId" value="@image.Id" 
+                                                           @(image.IsMain ? "checked" : "") />
+                                                    <label class="form-check-label small">Main</label>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-danger btn-sm delete-image" 
+                                                        data-image-id="@image.Id">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        @if (image.IsMain)
+                                        {
+                                            <span class="position-absolute top-0 start-0 badge bg-primary m-1">
+                                                <i class="bi bi-star-fill"></i>
+                                                Main
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-muted mb-3">
+                        <i class="bi bi-image display-6"></i>
+                        <p class="mb-0">No images uploaded</p>
+                    </div>
+                }
+
+                <!-- Upload New Images -->
+                <div class="mb-3">
+                    <label asp-for="ImageFiles" class="form-label">Upload New Images</label>
+                    <input asp-for="ImageFiles" class="form-control" type="file" multiple accept="image/*" />
+                    <div class="form-text">
+                        JPG, PNG, GIF, WebP. Max 2MB per image.
+                    </div>
+                    <span asp-validation-for="ImageFiles" class="text-danger"></span>
+                </div>
+
+                <!-- New Image Preview -->
+                <div id="newImagePreview" style="display: none;">
+                    <label class="form-label">New Images Preview</label>
+                    <div class="row" id="newImagePreviews"></div>
+                </div>
+
+                <!-- Hidden field for images to delete -->
+                <input type="hidden" id="imagesToDelete" name="ImagesToDelete" />
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightning text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-eye"></i>
+                        View Details
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                        Delete Product
+                    </a>
+                    <hr class="my-2">
+                    <a asp-action="Create" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-plus-circle"></i>
+                        Create New Product
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            let imagesToDelete = [];
+
+            // Real-time product name validation
+            let nameTimeout;
+            $('#Name').on('input', function() {
+                clearTimeout(nameTimeout);
+                const name = $(this).val().trim();
+                const productId = $('#Id').val();
+                const $feedback = $(this).siblings('.text-danger');
+                
+                if (name.length > 0) {
+                    nameTimeout = setTimeout(function() {
+                        $.get('@Url.Action("CheckProductName")', { name: name, id: productId })
+                            .done(function(data) {
+                                if (!data.available) {
+                                    $feedback.text('A product with this name already exists.');
+                                    $feedback.show();
+                                } else {
+                                    $feedback.hide();
+                                }
+                            });
+                    }, 500);
+                }
+            });
+
+            // Real-time SKU validation
+            let skuTimeout;
+            $('#SKU').on('input', function() {
+                clearTimeout(skuTimeout);
+                const sku = $(this).val().trim();
+                const productId = $('#Id').val();
+                const $feedback = $(this).siblings('.text-danger');
+                
+                if (sku.length > 0) {
+                    skuTimeout = setTimeout(function() {
+                        $.get('@Url.Action("CheckSku")', { sku: sku, id: productId })
+                            .done(function(data) {
+                                if (!data.available) {
+                                    $feedback.text('A product with this SKU already exists.');
+                                    $feedback.show();
+                                } else {
+                                    $feedback.hide();
+                                }
+                            });
+                    }, 500);
+                }
+            });
+
+            // New image file preview functionality
+            $('#ImageFiles').on('change', function() {
+                const files = this.files;
+                const $container = $('#newImagePreview');
+                const $previews = $('#newImagePreviews');
+                
+                $previews.empty();
+                
+                if (files.length > 0) {
+                    $container.show();
+                    
+                    Array.from(files).forEach((file, index) => {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const preview = `
+                                    <div class="col-6 mb-2">
+                                        <div class="card">
+                                            <img src="${e.target.result}" class="card-img-top" style="height: 100px; object-fit: cover;">
+                                            <div class="card-body p-2 text-center">
+                                                <small class="text-muted">${file.name}</small>
+                                                <br>
+                                                <small class="text-muted">${(file.size / 1024).toFixed(1)} KB</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                $previews.append(preview);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                } else {
+                    $container.hide();
+                }
+            });
+
+            // Delete image functionality
+            $('.delete-image').on('click', function() {
+                const imageId = $(this).data('image-id');
+                const $imageCard = $(this).closest('[data-image-id]');
+                
+                if (confirm('Are you sure you want to delete this image?')) {
+                    imagesToDelete.push(imageId);
+                    $imageCard.fadeOut(300, function() {
+                        $(this).remove();
+                        updateImagesToDeleteField();
+                        
+                        // If this was the main image, reset main image selection
+                        if ($(this).find('input[name="MainImageId"]:checked').length > 0) {
+                            const $firstRemaining = $('#currentImages [data-image-id]:first input[name="MainImageId"]');
+                            if ($firstRemaining.length > 0) {
+                                $firstRemaining.prop('checked', true);
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Update hidden field with images to delete
+            function updateImagesToDeleteField() {
+                $('#imagesToDelete').val(imagesToDelete.join(','));
+            }
+
+            // Price validation
+            $('#DiscountPrice').on('input', function() {
+                const discountPrice = parseFloat($(this).val()) || 0;
+                const regularPrice = parseFloat($('#Price').val()) || 0;
+                const $feedback = $(this).siblings('.text-danger');
+                
+                if (discountPrice > 0 && regularPrice > 0 && discountPrice >= regularPrice) {
+                    $feedback.text('Discount price must be less than regular price.');
+                    $feedback.show();
+                } else {
+                    $feedback.hide();
+                }
+            });
+
+            // Character counter for description
+            $('#Description').on('input', function() {
+                const current = $(this).val().length;
+                const max = 1000;
+                const remaining = max - current;
+                
+                let $counter = $(this).siblings('.char-counter');
+                if ($counter.length === 0) {
+                    $counter = $('<div class="char-counter form-text text-end"></div>');
+                    $(this).after($counter);
+                }
+                
+                $counter.text(`${current}/${max} characters`);
+                $counter.toggleClass('text-warning', remaining < 100);
+                $counter.toggleClass('text-danger', remaining < 20);
+            });
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .char-counter {
+            font-size: 0.8rem;
+        }
+        
+        .form-text {
+            font-size: 0.875rem;
+        }
+    </style>
+}

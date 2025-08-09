@@ -1,0 +1,328 @@
+@model FAQEditViewModel
+@{
+    ViewData["Title"] = "Edit FAQ";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">FAQs</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="Details" asp-route-id="@Model.Id">FAQ Details</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Edit</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-pencil-square text-primary"></i>
+            Edit FAQ
+        </h2>
+        <p class="text-muted">Update FAQ information and content</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                <i class="bi bi-eye"></i>
+                View Details
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to FAQs
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Edit Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-question-circle text-primary"></i>
+                    FAQ Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" novalidate>
+                    <input asp-for="Id" type="hidden" />
+                    <input asp-for="CreatedDate" type="hidden" />
+                    <input asp-for="ViewCount" type="hidden" />
+                    <input asp-for="HelpfulCount" type="hidden" />
+                    <input asp-for="NotHelpfulCount" type="hidden" />
+                    
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Question -->
+                    <div class="mb-3">
+                        <label asp-for="Question" class="form-label required">Question</label>
+                        <textarea asp-for="Question" class="form-control" rows="3" maxlength="500"></textarea>
+                        <span asp-validation-for="Question" class="text-danger"></span>
+                        <div class="form-text">
+                            <span id="questionCount">@(Model.Question?.Length ?? 0)</span>/500 characters
+                        </div>
+                    </div>
+
+                    <!-- Answer -->
+                    <div class="mb-3">
+                        <label asp-for="Answer" class="form-label required">Answer</label>
+                        <textarea asp-for="Answer" class="form-control" rows="6"></textarea>
+                        <span asp-validation-for="Answer" class="text-danger"></span>
+                    </div>
+
+                    <!-- Category and Order -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="CategoryId" class="form-label">Category</label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="Model.CategoryOptions">
+                                <option value="">Select Category (Optional)</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DisplayOrder" class="form-label">Display Order</label>
+                            <input asp-for="DisplayOrder" type="number" class="form-control" min="0">
+                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Tags and Author -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Tags" class="form-label">Tags</label>
+                            <input asp-for="Tags" class="form-control" id="tagsInput">
+                            <span asp-validation-for="Tags" class="text-danger"></span>
+                            @if (Model.TagOptions.Any())
+                            {
+                                <div class="mt-2">
+                                    <small class="text-muted">Popular tags:</small>
+                                    @foreach (var tag in Model.TagOptions.Take(8))
+                                    {
+                                        <button type="button" class="btn btn-outline-secondary btn-sm me-1 mt-1 tag-suggestion" 
+                                                data-tag="@tag">@tag</button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Author" class="form-label">Author</label>
+                            <input asp-for="Author" class="form-control" list="authorSuggestions">
+                            <datalist id="authorSuggestions">
+                                @foreach (var author in Model.AuthorOptions)
+                                {
+                                    <option value="@author.Value">@author.Text</option>
+                                }
+                            </datalist>
+                            <span asp-validation-for="Author" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsActive" class="form-check-label">
+                                Active (Visible to users)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i>
+                                Update FAQ
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- FAQ Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-info-circle text-info"></i>
+                    FAQ Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <dl class="row small">
+                    <dt class="col-6">FAQ ID:</dt>
+                    <dd class="col-6">@Model.Id</dd>
+                    
+                    <dt class="col-6">Created:</dt>
+                    <dd class="col-6">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+                    
+                    <dt class="col-6">Views:</dt>
+                    <dd class="col-6">@Model.ViewCount</dd>
+                    
+                    <dt class="col-6">Helpful:</dt>
+                    <dd class="col-6">@Model.HelpfulCount</dd>
+                    
+                    <dt class="col-6">Not Helpful:</dt>
+                    <dd class="col-6">@Model.NotHelpfulCount</dd>
+                    
+                    <dt class="col-6">Score:</dt>
+                    <dd class="col-6">
+                        @{
+                            var score = Model.HelpfulCount - Model.NotHelpfulCount;
+                        }
+                        <span class="@(score > 0 ? "text-success" : score < 0 ? "text-danger" : "text-muted")">
+                            @score
+                        </span>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightning text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-@(Model.IsActive ? "warning" : "success") btn-sm toggle-status" 
+                            data-faq-id="@Model.Id">
+                        <i class="bi bi-@(Model.IsActive ? "pause" : "play")-fill"></i>
+                        @(Model.IsActive ? "Deactivate" : "Activate") FAQ
+                    </button>
+                    
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-eye"></i>
+                        View Details
+                    </a>
+                    
+                    <hr>
+                    
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                        Delete FAQ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Character count for question
+            $('#Question').on('input', function() {
+                const length = $(this).val().length;
+                $('#questionCount').text(length);
+                
+                if (length > 450) {
+                    $('#questionCount').addClass('text-warning');
+                } else if (length > 500) {
+                    $('#questionCount').addClass('text-danger').removeClass('text-warning');
+                } else {
+                    $('#questionCount').removeClass('text-warning text-danger');
+                }
+            });
+
+            // Tag suggestions
+            $('.tag-suggestion').on('click', function() {
+                const tag = $(this).data('tag');
+                const currentTags = $('#tagsInput').val();
+                
+                if (currentTags === '') {
+                    $('#tagsInput').val(tag);
+                } else if (!currentTags.split(',').map(t => t.trim()).includes(tag)) {
+                    $('#tagsInput').val(currentTags + ', ' + tag);
+                }
+            });
+
+            // Quick status toggle
+            $('.toggle-status').on('click', function() {
+                const faqId = $(this).data('faq-id');
+                
+                $.post('@Url.Action("ToggleStatus")', { id: faqId })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error updating FAQ status');
+                    });
+            });
+
+            // Form validation
+            $('form').on('submit', function(e) {
+                const question = $('#Question').val().trim();
+                const answer = $('#Answer').val().trim();
+
+                if (!question) {
+                    e.preventDefault();
+                    alert('Please enter a question.');
+                    $('#Question').focus();
+                    return false;
+                }
+
+                if (!answer) {
+                    e.preventDefault();
+                    alert('Please provide an answer.');
+                    $('#Answer').focus();
+                    return false;
+                }
+            });
+
+            // Initialize
+            $('#Question').trigger('input');
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .tag-suggestion {
+            cursor: pointer;
+        }
+        
+        .tag-suggestion:hover {
+            background-color: var(--bs-secondary);
+            color: white;
+        }
+    </style>
+}
+
+

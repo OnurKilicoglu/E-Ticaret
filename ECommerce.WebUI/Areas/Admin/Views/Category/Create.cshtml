@@ -1,0 +1,273 @@
+@model CategoryViewModel
+@{
+    ViewData["Title"] = "Create Category";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Categories</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Create New</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-plus-circle text-primary"></i>
+            Create New Category
+        </h2>
+        <p class="text-muted">Add a new product category to organize your inventory</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Back to Categories
+        </a>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Create Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle text-primary"></i>
+                    Category Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row">
+                        <!-- Category Name -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Name" class="form-label required">Category Name</label>
+                            <input asp-for="Name" class="form-control" placeholder="Enter category name" maxlength="100" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <!-- Display Order -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DisplayOrder" class="form-label">Display Order</label>
+                            <input asp-for="DisplayOrder" class="form-control" type="number" min="0" />
+                            <div class="form-text">Lower numbers appear first in listings</div>
+                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" 
+                                  placeholder="Enter category description (optional)" maxlength="500"></textarea>
+                        <div class="form-text">Brief description of this category</div>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <!-- Image URL -->
+                    <div class="mb-3">
+                        <label asp-for="ImageUrl" class="form-label">Image URL</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-image"></i>
+                            </span>
+                            <input asp-for="ImageUrl" class="form-control" 
+                                   placeholder="https://example.com/image.jpg" />
+                        </div>
+                        <div class="form-text">Optional image URL for the category</div>
+                        <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div class="mb-3" id="imagePreview" style="display: none;">
+                        <label class="form-label">Image Preview</label>
+                        <div class="border rounded p-3 bg-light">
+                            <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 150px;">
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsActive" class="form-check-label">
+                                Active Category
+                            </label>
+                        </div>
+                        <div class="form-text">Only active categories will be visible to customers</div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i>
+                            Create Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Sidebar -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-warning"></i>
+                    Tips & Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-primary">
+                        <i class="bi bi-tag"></i>
+                        Category Naming
+                    </h6>
+                    <ul class="list-unstyled text-muted small">
+                        <li>• Use clear, descriptive names</li>
+                        <li>• Keep names under 100 characters</li>
+                        <li>• Avoid special characters</li>
+                        <li>• Use title case (e.g., "Electronics")</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-primary">
+                        <i class="bi bi-sort-numeric-up"></i>
+                        Display Order
+                    </h6>
+                    <ul class="list-unstyled text-muted small">
+                        <li>• Lower numbers show first</li>
+                        <li>• Use increments of 10 (10, 20, 30...)</li>
+                        <li>• Allows easy reordering later</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-primary">
+                        <i class="bi bi-image"></i>
+                        Category Images
+                    </h6>
+                    <ul class="list-unstyled text-muted small">
+                        <li>• Use high-quality images</li>
+                        <li>• Recommended size: 300x200px</li>
+                        <li>• Use HTTPS URLs</li>
+                        <li>• Supported formats: JPG, PNG, WebP</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <small>
+                        Categories can be edited or deactivated later. 
+                        Inactive categories won't be visible to customers.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Real-time name validation
+            let nameTimeout;
+            $('#Name').on('input', function() {
+                clearTimeout(nameTimeout);
+                const name = $(this).val().trim();
+                const $feedback = $(this).siblings('.text-danger');
+                
+                if (name.length > 0) {
+                    nameTimeout = setTimeout(function() {
+                        $.get('@Url.Action("CheckCategoryName")', { name: name })
+                            .done(function(data) {
+                                if (!data.available) {
+                                    $feedback.text('A category with this name already exists.');
+                                    $feedback.show();
+                                } else {
+                                    $feedback.hide();
+                                }
+                            });
+                    }, 500);
+                }
+            });
+
+            // Image preview functionality
+            $('#ImageUrl').on('input', function() {
+                const url = $(this).val().trim();
+                const $preview = $('#imagePreview');
+                const $img = $('#previewImg');
+                
+                if (url && isValidImageUrl(url)) {
+                    $img.attr('src', url);
+                    $img.on('load', function() {
+                        $preview.show();
+                    });
+                    $img.on('error', function() {
+                        $preview.hide();
+                    });
+                } else {
+                    $preview.hide();
+                }
+            });
+
+            // Character counter for description
+            $('#Description').on('input', function() {
+                const current = $(this).val().length;
+                const max = 500;
+                const remaining = max - current;
+                
+                let $counter = $(this).siblings('.char-counter');
+                if ($counter.length === 0) {
+                    $counter = $('<div class="char-counter form-text text-end"></div>');
+                    $(this).after($counter);
+                }
+                
+                $counter.text(`${current}/${max} characters`);
+                $counter.toggleClass('text-warning', remaining < 50);
+                $counter.toggleClass('text-danger', remaining < 10);
+            });
+
+            function isValidImageUrl(url) {
+                return /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url);
+            }
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .char-counter {
+            font-size: 0.8rem;
+        }
+        
+        .form-text {
+            font-size: 0.875rem;
+        }
+    </style>
+}

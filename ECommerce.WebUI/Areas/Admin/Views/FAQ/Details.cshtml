@@ -1,0 +1,426 @@
+@model FAQDetailViewModel
+@{
+    ViewData["Title"] = "FAQ Details";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">FAQs</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">FAQ Details</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-question-circle text-info"></i>
+            FAQ Details
+            <span class="badge bg-@Model.StatusCssClass ms-2">@Model.StatusDisplayName</span>
+        </h2>
+        <p class="text-muted">View comprehensive FAQ information</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="bi bi-pencil"></i>
+                Edit FAQ
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to FAQs
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- FAQ Content -->
+    <div class="col-lg-8">
+        <!-- Question and Answer -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-question-circle-fill"></i>
+                    FAQ Content
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="faq-display">
+                    <h6 class="fw-bold text-primary mb-3">Question:</h6>
+                    <p class="fs-5 mb-4">@Model.Question</p>
+                    
+                    <h6 class="fw-bold text-success mb-3">Answer:</h6>
+                    <div class="answer-content">
+                        @Html.Raw(Html.Encode(Model.Answer).Replace("\n", "<br>"))
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meta Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    FAQ Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Basic Information</h6>
+                        <dl class="row">
+                            <dt class="col-sm-5">FAQ ID:</dt>
+                            <dd class="col-sm-7">@Model.Id</dd>
+                            
+                            <dt class="col-sm-5">Category:</dt>
+                            <dd class="col-sm-7">
+                                @if (!string.IsNullOrEmpty(Model.CategoryName))
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-tag"></i>
+                                        @Model.CategoryName
+                                    </span>
+                                }
+                                else
+                                {
+                                    <em class="text-muted">No category</em>
+                                }
+                            </dd>
+                            
+                            <dt class="col-sm-5">Author:</dt>
+                            <dd class="col-sm-7">
+                                @if (!string.IsNullOrEmpty(Model.Author))
+                                {
+                                    <i class="bi bi-person"></i>
+                                    @Model.Author
+                                }
+                                else
+                                {
+                                    <em class="text-muted">Unknown</em>
+                                }
+                            </dd>
+                            
+                            <dt class="col-sm-5">Display Order:</dt>
+                            <dd class="col-sm-7">@Model.DisplayOrder</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Engagement Metrics</h6>
+                        <dl class="row">
+                            <dt class="col-sm-5">Views:</dt>
+                            <dd class="col-sm-7">
+                                <i class="bi bi-eye text-info"></i>
+                                @Model.ViewCount
+                            </dd>
+                            
+                            <dt class="col-sm-5">Helpful Votes:</dt>
+                            <dd class="col-sm-7">
+                                <i class="bi bi-hand-thumbs-up text-success"></i>
+                                @Model.HelpfulCount
+                            </dd>
+                            
+                            <dt class="col-sm-5">Not Helpful:</dt>
+                            <dd class="col-sm-7">
+                                <i class="bi bi-hand-thumbs-down text-danger"></i>
+                                @Model.NotHelpfulCount
+                            </dd>
+                            
+                            <dt class="col-sm-5">Helpfulness:</dt>
+                            <dd class="col-sm-7">
+                                @{
+                                    var score = Model.HelpfulnessScore;
+                                    var percentage = Model.HelpfulPercentage;
+                                }
+                                <span class="@(score > 0 ? "text-success" : score < 0 ? "text-danger" : "text-muted")">
+                                    @score points (@percentage.ToString("F1")% helpful)
+                                </span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                <!-- Tags -->
+                @if (Model.TagList.Any())
+                {
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6 class="fw-bold mb-2">Tags</h6>
+                            @foreach (var tag in Model.TagList)
+                            {
+                                <span class="badge bg-light text-dark me-1 mb-1">@tag</span>
+                            }
+                        </div>
+                    </div>
+                }
+                
+                <!-- Timestamps -->
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Created</h6>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-calendar-plus"></i>
+                            @Model.CreatedDate.ToString("MMMM dd, yyyy 'at' hh:mm tt")
+                        </p>
+                    </div>
+                    @if (Model.UpdatedDate.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Last Updated</h6>
+                            <p class="text-muted mb-0">
+                                <i class="bi bi-calendar-check"></i>
+                                @Model.UpdatedDate.Value.ToString("MMMM dd, yyyy 'at' hh:mm tt")
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Status Control -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-gear text-secondary"></i>
+                    Status Control
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="status-dot bg-@Model.StatusCssClass me-3"></div>
+                    <div>
+                        <strong>@Model.StatusDisplayName</strong>
+                        <br>
+                        <small class="text-muted">
+                            @if (Model.IsActive)
+                            {
+                                <span>Visible to website visitors</span>
+                            }
+                            else
+                            {
+                                <span>Hidden from website</span>
+                            }
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-@(Model.IsActive ? "warning" : "success") btn-sm toggle-status" 
+                            data-faq-id="@Model.Id">
+                        <i class="bi bi-@(Model.IsActive ? "pause" : "play")-fill"></i>
+                        @(Model.IsActive ? "Deactivate" : "Activate") FAQ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-tools text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                        Edit FAQ
+                    </a>
+                    
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('@Url.ActionLink("Details", "FAQ", new { id = Model.Id })')">
+                        <i class="bi bi-clipboard"></i>
+                        Copy Admin Link
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyFAQContent()">
+                        <i class="bi bi-copy"></i>
+                        Copy FAQ Content
+                    </button>
+                    
+                    <hr>
+                    
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                        Delete FAQ
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Insights -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-graph-up text-success"></i>
+                    Performance Insights
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- View Count Progress -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">Views</small>
+                        <small class="text-muted">@Model.ViewCount</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        @{
+                            var viewPercentage = Math.Min(100, (Model.ViewCount / 100.0) * 100);
+                        }
+                        <div class="progress-bar bg-info" role="progressbar" style="width: @(viewPercentage)%"></div>
+                    </div>
+                </div>
+
+                <!-- Helpfulness Score -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">Helpfulness</small>
+                        <small class="text-muted">@Model.HelpfulPercentage.ToString("F1")%</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: @(Model.HelpfulPercentage)%"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="border-end">
+                            <h6 class="text-info mb-0">@Model.ViewCount</h6>
+                            <small class="text-muted">Views</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border-end">
+                            <h6 class="text-success mb-0">@Model.HelpfulCount</h6>
+                            <small class="text-muted">Helpful</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <h6 class="@(Model.HelpfulnessScore > 0 ? "text-success" : Model.HelpfulnessScore < 0 ? "text-danger" : "text-muted") mb-0">
+                            @Model.HelpfulnessScore
+                        </h6>
+                        <small class="text-muted">Score</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Status toggle functionality
+            $('.toggle-status').on('click', function() {
+                const faqId = $(this).data('faq-id');
+                
+                $.post('@Url.Action("ToggleStatus")', { id: faqId })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error updating FAQ status');
+                    });
+            });
+        });
+
+        // Copy to clipboard function
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                showToast('Link copied to clipboard!', 'success');
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+                alert('Failed to copy link to clipboard');
+            });
+        }
+
+        // Copy FAQ content
+        function copyFAQContent() {
+            const question = @Html.Raw(Json.Serialize(Model.Question));
+            const answer = @Html.Raw(Json.Serialize(Model.Answer));
+            const content = `Q: ${question}\n\nA: ${answer}`;
+            
+            navigator.clipboard.writeText(content).then(function() {
+                showToast('FAQ content copied to clipboard!', 'success');
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+                alert('Failed to copy FAQ content');
+            });
+        }
+
+        function showToast(message, type) {
+            const toast = $(`
+                <div class="toast align-items-center text-white bg-${type} border-0 position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 1050;" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                                data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `);
+            
+            $('body').append(toast);
+            const toastEl = new bootstrap.Toast(toast[0]);
+            toastEl.show();
+            
+            toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+    </script>
+
+    <style>
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .faq-display {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.375rem;
+            border-left: 4px solid var(--bs-info);
+        }
+        
+        .answer-content {
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+    </style>
+}

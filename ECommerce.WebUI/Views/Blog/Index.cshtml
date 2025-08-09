@@ -1,0 +1,134 @@
+@model BlogListViewModel
+@{
+    ViewData["Title"] = "Blog";
+    ViewData["MetaDescription"] = "Read our latest blog posts, tips, and insights about products and industry trends.";
+}
+
+<div class="container py-5">
+    <!-- Blog Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold text-primary mb-3">Our Blog</h1>
+            <p class="lead text-muted">
+                Discover the latest insights, tips, and stories from our team
+            </p>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="get" class="d-flex">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Search blog posts..." 
+                           value="@Model.Filters.SearchTerm" />
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <select name="category" class="form-select" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                @if (ViewBag.Categories != null)
+                {
+                    @foreach (var category in (List<string>)ViewBag.Categories)
+                    {
+                        <option value="@category" selected="@(Model.Filters.Category == category)">
+                            @category
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+
+    <!-- Blog Posts -->
+    @if (Model.Posts.Posts.Any())
+    {
+        <div class="row g-4">
+            @foreach (var post in Model.Posts.Posts)
+            {
+                <div class="col-lg-6 col-md-6">
+                    <partial name="_BlogCardPartial" model="post" />
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.Posts.TotalPages > 1)
+        {
+            <nav aria-label="Blog pagination" class="mt-5">
+                <ul class="pagination justify-content-center">
+                    @if (Model.Posts.HasPreviousPage)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Posts.CurrentPage - 1)" 
+                               asp-route-search="@Model.Filters.SearchTerm" asp-route-category="@Model.Filters.Category">
+                                Previous
+                            </a>
+                        </li>
+                    }
+
+                    @for (int i = Math.Max(1, Model.Posts.CurrentPage - 2); i <= Math.Min(Model.Posts.TotalPages, Model.Posts.CurrentPage + 2); i++)
+                    {
+                        <li class="page-item @(i == Model.Posts.CurrentPage ? "active" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@i" 
+                               asp-route-search="@Model.Filters.SearchTerm" asp-route-category="@Model.Filters.Category">
+                                @i
+                            </a>
+                        </li>
+                    }
+
+                    @if (Model.Posts.HasNextPage)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Posts.CurrentPage + 1)" 
+                               asp-route-search="@Model.Filters.SearchTerm" asp-route-category="@Model.Filters.Category">
+                                Next
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-12 text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-journal-text display-1 text-muted"></i>
+                </div>
+                <h3 class="text-muted">No Blog Posts Found</h3>
+                <p class="text-muted">
+                    @if (!string.IsNullOrEmpty(Model.Filters.SearchTerm))
+                    {
+                        <span>No posts match your search criteria. Try different keywords.</span>
+                    }
+                    else
+                    {
+                        <span>Check back soon for our latest blog posts!</span>
+                    }
+                </p>
+                @if (!string.IsNullOrEmpty(Model.Filters.SearchTerm))
+                {
+                    <a asp-action="Index" class="btn btn-primary">View All Posts</a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-submit form when category changes
+            $('select[name="category"]').on('change', function() {
+                $(this).closest('form').submit();
+            });
+        });
+    </script>
+}

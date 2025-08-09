@@ -1,0 +1,402 @@
+@model SliderDetailViewModel
+@{
+    ViewData["Title"] = "Slider Details";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Sliders</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-image text-info"></i>
+            @Model.Title
+            <span class="badge bg-@Model.StatusCssClass ms-2">@Model.StatusDisplayName</span>
+            <span class="badge bg-dark ms-1">#@Model.DisplayOrder</span>
+        </h2>
+        <p class="text-muted">
+            Created on @Model.CreatedDate.ToString("MMMM dd, yyyy")
+            @if (Model.UpdatedDate.HasValue)
+            {
+                <span>• Last updated @Model.UpdatedDate.Value.ToString("MMM dd, yyyy")</span>
+            }
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="bi bi-pencil"></i>
+                Edit Slider
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Sliders
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Slider Preview -->
+    <div class="col-lg-8">
+        <!-- Image Preview Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-image"></i>
+                    Slider Preview
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <div class="position-relative">
+                        <img src="@Model.ImagePath" alt="@Model.Title" 
+                             class="img-fluid w-100" style="max-height: 400px; object-fit: cover;">
+                        
+                        <!-- Overlay with title and description -->
+                        <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-75 text-white p-3">
+                            <h4 class="mb-1">@Model.Title</h4>
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                <p class="mb-1">@Model.Description</p>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.LinkUrl))
+                            {
+                                <small>
+                                    <i class="bi bi-link-45deg"></i>
+                                    Links to: @Model.LinkUrl
+                                </small>
+                            }
+                        </div>
+                        
+                        <!-- Status overlay -->
+                        <div class="position-absolute top-0 start-0 p-3">
+                            <span class="badge bg-@Model.StatusCssClass fs-6">
+                                @Model.StatusDisplayName
+                            </span>
+                        </div>
+                        
+                        <!-- Order overlay -->
+                        <div class="position-absolute top-0 end-0 p-3">
+                            <span class="badge bg-dark fs-6">
+                                Order: @Model.DisplayOrder
+                            </span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-image display-1"></i>
+                        <h4 class="mt-3">No Image</h4>
+                        <p>This slider doesn't have an image uploaded yet.</p>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                            <i class="bi bi-upload"></i>
+                            Upload Image
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Detailed Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    Slider Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Basic Information</h6>
+                        <dl class="row">
+                            <dt class="col-sm-4">Title:</dt>
+                            <dd class="col-sm-8"><strong>@Model.Title</strong></dd>
+                            
+                            <dt class="col-sm-4">Description:</dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(Model.Description))
+                                {
+                                    @Model.Description
+                                }
+                                else
+                                {
+                                    <em class="text-muted">No description</em>
+                                }
+                            </dd>
+                            
+                            <dt class="col-sm-4">Link URL:</dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(Model.LinkUrl))
+                                {
+                                    <a href="@Model.LinkUrl" target="_blank" class="text-decoration-none">
+                                        @Model.LinkUrl
+                                        <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <em class="text-muted">No link</em>
+                                }
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Settings & Status</h6>
+                        <dl class="row">
+                            <dt class="col-sm-5">Display Order:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-dark">#@Model.DisplayOrder</span>
+                            </dd>
+                            
+                            <dt class="col-sm-5">Status:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-@Model.StatusCssClass">
+                                    @Model.StatusDisplayName
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-5">Slider ID:</dt>
+                            <dd class="col-sm-7">@Model.Id</dd>
+                            
+                            <dt class="col-sm-5">Created:</dt>
+                            <dd class="col-sm-7">@Model.CreatedDate.ToString("MMM dd, yyyy HH:mm")</dd>
+                            
+                            @if (Model.UpdatedDate.HasValue)
+                            {
+                                <dt class="col-sm-5">Last Updated:</dt>
+                                <dd class="col-sm-7">@Model.UpdatedDate.Value.ToString("MMM dd, yyyy HH:mm")</dd>
+                            }
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Stats -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-speedometer text-primary"></i>
+                    Quick Stats
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-info mb-0">@Model.DisplayOrder</h4>
+                            <small class="text-muted">Display Order</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-@(Model.IsActive ? "success" : "secondary") mb-0">
+                            @(Model.IsActive ? "Active" : "Inactive")
+                        </h4>
+                        <small class="text-muted">Status</small>
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <hr>
+                    <div class="text-center">
+                        <h6 class="text-success mb-0">
+                            <i class="bi bi-check-circle"></i>
+                            Image Uploaded
+                        </h6>
+                        <small class="text-muted">Ready for display</small>
+                    </div>
+                }
+                else
+                {
+                    <hr>
+                    <div class="text-center">
+                        <h6 class="text-warning mb-0">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            No Image
+                        </h6>
+                        <small class="text-muted">Upload required</small>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Slider Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-gear text-secondary"></i>
+                    Status Control
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="status-dot bg-@Model.StatusCssClass me-3"></div>
+                    <div>
+                        <strong>@Model.StatusDisplayName</strong>
+                        <br>
+                        <small class="text-muted">
+                            @if (Model.IsActive)
+                            {
+                                <span>Visible on website homepage</span>
+                            }
+                            else
+                            {
+                                <span>Hidden from website</span>
+                            }
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="button" class="btn btn-outline-@(Model.IsActive ? "warning" : "success") toggle-status" 
+                            data-slider-id="@Model.Id">
+                        <i class="bi bi-@(Model.IsActive ? "pause" : "play")-fill"></i>
+                        @(Model.IsActive ? "Deactivate" : "Activate") Slider
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-tools text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                        Edit Slider
+                    </a>
+                    
+                    @if (!string.IsNullOrEmpty(Model.LinkUrl))
+                    {
+                        <a href="@Model.LinkUrl" target="_blank" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                            Test Link
+                        </a>
+                    }
+                    
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">Order</span>
+                        <input type="number" class="form-control display-order-input" 
+                               value="@Model.DisplayOrder" 
+                               data-slider-id="@Model.Id" 
+                               min="1" max="999">
+                        <button class="btn btn-outline-secondary update-order" 
+                                data-slider-id="@Model.Id" title="Update Order">
+                            <i class="bi bi-check"></i>
+                        </button>
+                    </div>
+                    
+                    <hr>
+                    
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                        Delete Slider
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Status toggle functionality
+            $('.toggle-status').on('click', function() {
+                const sliderId = $(this).data('slider-id');
+                
+                $.post('@Url.Action("ToggleStatus")', { id: sliderId })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error updating slider status');
+                    });
+            });
+
+            // Display order update functionality
+            $('.update-order').on('click', function() {
+                const sliderId = $(this).data('slider-id');
+                const newOrder = $(`.display-order-input[data-slider-id="${sliderId}"]`).val();
+                
+                if (!newOrder || newOrder < 1 || newOrder > 999) {
+                    alert('Display order must be between 1 and 999');
+                    return;
+                }
+                
+                $.post('@Url.Action("UpdateOrder")', { id: sliderId, newOrder: newOrder })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error updating display order');
+                    });
+            });
+
+            // Enter key support for display order input
+            $('.display-order-input').on('keypress', function(e) {
+                if (e.which === 13) { // Enter key
+                    const sliderId = $(this).data('slider-id');
+                    $(`.update-order[data-slider-id="${sliderId}"]`).click();
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+    </style>
+}

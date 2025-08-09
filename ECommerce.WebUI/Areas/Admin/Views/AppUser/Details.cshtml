@@ -1,0 +1,496 @@
+@model UserDetailViewModel
+@{
+    ViewData["Title"] = "AppUser Details";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">AppUsers</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.FullName</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-person-badge text-info"></i>
+            @Model.FullName
+            <span class="badge bg-@Model.RoleCssClass ms-2">@Model.RoleDisplayName</span>
+            <span class="badge bg-@Model.StatusCssClass ms-1">@Model.StatusDisplayName</span>
+        </h2>
+        <p class="text-muted">
+            User since @Model.CreatedDate.ToString("MMMM dd, yyyy")
+            @if (Model.LastLoginDate.HasValue)
+            {
+                <span>• Last login @Model.LastLoginDate.Value.ToString("MMM dd, yyyy")</span>
+            }
+            else
+            {
+                <span>• Never logged in</span>
+            }
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="bi bi-pencil"></i>
+                Edit User
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to AppUsers
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- User Profile Card -->
+    <div class="col-lg-8">
+        <!-- User Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-person-fill"></i>
+                    User Profile - @Model.UserName
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="bg-@Model.RoleCssClass rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-fill text-white fs-1"></i>
+                        </div>
+                        <h5>@Model.FullName</h5>
+                        <p class="text-muted">@@@@Model.UserName</p>
+                        <span class="badge bg-@Model.RoleCssClass">@Model.RoleDisplayName</span>
+                        <span class="badge bg-@Model.StatusCssClass ms-1">@Model.StatusDisplayName</span>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Contact Information</h6>
+                                <dl>
+                                    <dt>Email:</dt>
+                                    <dd><a href="mailto:@Model.Email">@Model.Email</a></dd>
+                                    
+                                    @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                                    {
+                                        <dt>Phone:</dt>
+                                        <dd><a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a></dd>
+                                    }
+                                    
+                                    <dt>Username:</dt>
+                                    <dd>@@@@Model.UserName</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Account Information</h6>
+                                <dl>
+                                    <dt>User ID:</dt>
+                                    <dd>@Model.Id</dd>
+                                    
+                                    <dt>Role:</dt>
+                                    <dd><span class="badge bg-@Model.RoleCssClass">@Model.RoleDisplayName</span></dd>
+                                    
+                                    <dt>Status:</dt>
+                                    <dd><span class="badge bg-@Model.StatusCssClass">@Model.StatusDisplayName</span></dd>
+                                    
+                                    <dt>Created:</dt>
+                                    <dd>@Model.CreatedDate.ToString("MMM dd, yyyy HH:mm")</dd>
+                                    
+                                    @if (Model.UpdatedDate.HasValue)
+                                    {
+                                        <dt>Last Updated:</dt>
+                                        <dd>@Model.UpdatedDate.Value.ToString("MMM dd, yyyy HH:mm")</dd>
+                                    }
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabbed Content -->
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="userDetailTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity"
+                                type="button" role="tab" aria-controls="activity" aria-selected="true">
+                            <i class="bi bi-activity"></i>
+                            Activity
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders"
+                                type="button" role="tab" aria-controls="orders" aria-selected="false">
+                            <i class="bi bi-bag"></i>
+                            Orders (@Model.TotalOrders)
+                        </button>
+                    </li>
+                    @if (Model.Addresses.Any())
+                    {
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="addresses-tab" data-bs-toggle="tab" data-bs-target="#addresses"
+                                    type="button" role="tab" aria-controls="addresses" aria-selected="false">
+                                <i class="bi bi-geo-alt"></i>
+                                Addresses (@Model.Addresses.Count)
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="userDetailTabsContent">
+                    <!-- Activity Tab -->
+                    <div class="tab-pane fade show active" id="activity" role="tabpanel" aria-labelledby="activity-tab">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Login Activity</h6>
+                                <dl class="row">
+                                    <dt class="col-sm-6">Last Login:</dt>
+                                    <dd class="col-sm-6">
+                                        @if (Model.Activity.LastLoginDate.HasValue)
+                                        {
+                                            @Model.Activity.LastLoginDate.Value.ToString("MMM dd, yyyy HH:mm")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Never</span>
+                                        }
+                                    </dd>
+                                    
+                                    <dt class="col-sm-6">Total Logins:</dt>
+                                    <dd class="col-sm-6">@Model.Activity.LoginCount</dd>
+                                    
+                                    <dt class="col-sm-6">Days Since Registration:</dt>
+                                    <dd class="col-sm-6">@Model.Activity.DaysSinceRegistration</dd>
+                                    
+                                    <dt class="col-sm-6">User Status:</dt>
+                                    <dd class="col-sm-6">
+                                        @if (Model.Activity.IsActiveUser)
+                                        {
+                                            <span class="badge bg-success">Active User</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">Inactive User</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Recent Activities</h6>
+                                @if (Model.Activity.RecentActivities.Any())
+                                {
+                                    <ul class="list-unstyled">
+                                        @foreach (var activity in Model.Activity.RecentActivities)
+                                        {
+                                            <li class="mb-2">
+                                                <i class="bi bi-dot text-primary"></i>
+                                                @activity
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <p class="text-muted">No recent activities</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Tab -->
+                    <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                        @if (Model.HasOrders)
+                        {
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold">Order Statistics</h6>
+                                    <dl class="row">
+                                        <dt class="col-sm-6">Total Orders:</dt>
+                                        <dd class="col-sm-6"><strong>@Model.TotalOrders</strong></dd>
+                                        
+                                        <dt class="col-sm-6">Total Spent:</dt>
+                                        <dd class="col-sm-6"><strong class="text-success">@Model.TotalSpent.ToString("C")</strong></dd>
+                                        
+                                        @if (Model.LastOrderDate.HasValue)
+                                        {
+                                            <dt class="col-sm-6">Last Order:</dt>
+                                            <dd class="col-sm-6">@Model.LastOrderDate.Value.ToString("MMM dd, yyyy")</dd>
+                                        }
+                                        
+                                        @if (Model.IsHighValueCustomer)
+                                        {
+                                            <dt class="col-sm-6">Customer Type:</dt>
+                                            <dd class="col-sm-6"><span class="badge bg-warning text-dark">High Value Customer</span></dd>
+                                        }
+                                    </dl>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold">Average Order Value</h6>
+                                    <div class="display-6 text-primary">
+                                        @((Model.TotalSpent / Math.Max(Model.TotalOrders, 1)).ToString("C"))
+                                    </div>
+                                    <small class="text-muted">Per order average</small>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold">Recent Orders</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Order #</th>
+                                            <th>Date</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-end">Total</th>
+                                            <th class="text-center">Items</th>
+                                            <th class="text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var order in Model.RecentOrders)
+                                        {
+                                            <tr>
+                                                <td><strong>@order.OrderNumber</strong></td>
+                                                <td>@order.OrderDate.ToString("MMM dd, yyyy")</td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-@order.StatusCssClass">@order.StatusDisplayName</span>
+                                                </td>
+                                                <td class="text-end">@order.TotalAmount.ToString("C")</td>
+                                                <td class="text-center">@order.ItemCount</td>
+                                                <td class="text-center">
+                                                    <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id" 
+                                                       class="btn btn-sm btn-outline-info" title="View Order">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <i class="bi bi-bag display-4 text-muted"></i>
+                                <h5 class="mt-3">No Orders</h5>
+                                <p class="text-muted">This user hasn't placed any orders yet.</p>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Addresses Tab -->
+                    @if (Model.Addresses.Any())
+                    {
+                        <div class="tab-pane fade" id="addresses" role="tabpanel" aria-labelledby="addresses-tab">
+                            <h6 class="fw-bold">Shipping Addresses</h6>
+                            <div class="row">
+                                @foreach (var address in Model.Addresses)
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card h-100">
+                                            <div class="card-body">
+                                                @if (address.IsDefault)
+                                                {
+                                                    <span class="badge bg-primary mb-2">Default Address</span>
+                                                }
+                                                <address class="mb-0">
+                                                    @address.AddressLine<br>
+                                                    @address.City, @address.ZipCode<br>
+                                                    @address.Country
+                                                </address>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Stats -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-bar-chart text-primary"></i>
+                    Quick Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-primary mb-0">@Model.TotalOrders</h4>
+                            <small class="text-muted">Total Orders</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success mb-0">@Model.TotalSpent.ToString("C0")</h4>
+                        <small class="text-muted">Total Spent</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-info mb-0">@Model.LoginCount</h4>
+                            <small class="text-muted">Logins</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-warning mb-0">@Model.DaysSinceRegistration</h4>
+                        <small class="text-muted">Days Member</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-person-gear text-secondary"></i>
+                    Account Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="status-indicator">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="status-dot bg-@Model.StatusCssClass me-3"></div>
+                        <div>
+                            <strong>@Model.StatusDisplayName Account</strong>
+                            <br>
+                            <small class="text-muted">
+                                @if (Model.IsActive)
+                                {
+                                    @if (Model.IsRecentlyActive)
+                                    {
+                                        <span>Active user - logged in recently</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Active account - not recently used</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span>Account is deactivated</span>
+                                }
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <div class="status-dot bg-@Model.RoleCssClass me-3"></div>
+                        <div>
+                            <strong>@Model.RoleDisplayName Role</strong>
+                            <br>
+                            <small class="text-muted">
+                                @if (Model.Role == ECommerce.Core.Entities.UserRole.Admin)
+                                {
+                                    <span>Full system administration access</span>
+                                }
+                                else
+                                {
+                                    <span>Standard customer account</span>
+                                }
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-tools text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                        Edit User Profile
+                    </a>
+                    
+                    @if (Model.HasOrders)
+                    {
+                        <a asp-controller="Order" asp-action="Index" asp-route-searchTerm="@Model.Email" 
+                           class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-bag"></i>
+                            View All Orders
+                        </a>
+                    }
+                    
+                    <hr>
+                    
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                        Delete User
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    
+    .status-indicator {
+        font-size: 0.9rem;
+    }
+    
+    .card-header-tabs .nav-link.active {
+        background-color: transparent;
+        border-bottom-color: var(--bs-primary);
+        color: var(--bs-primary);
+    }
+    
+    .display-6 {
+        font-size: 2rem;
+        font-weight: 300;
+    }
+</style>

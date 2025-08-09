@@ -1,0 +1,636 @@
+@model PaymentDetailViewModel
+@{
+    ViewData["Title"] = "Payment Details";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Payments</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Payment #@Model.Id</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-credit-card text-primary"></i>
+            Payment #@Model.Id
+            <span class="badge bg-@Model.PaymentStatusCssClass ms-2">
+                <i class="bi @Model.PaymentStatusIcon"></i>
+                @Model.PaymentStatusDisplayName
+            </span>
+        </h2>
+        <p class="text-muted">
+            Payment processed on @Model.PaymentDate.ToString("MMM dd, yyyy") for @Model.FormattedAmount
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            @if (Model.CanRefund)
+            {
+                <button type="button" class="btn btn-outline-info process-refund" 
+                        data-payment-id="@Model.Id" data-amount="@Model.Amount">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    Process Refund
+                </button>
+            }
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-warning">
+                <i class="bi bi-pencil"></i>
+                Edit
+            </a>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-gear"></i>
+                    Actions
+                </button>
+                <ul class="dropdown-menu">
+                    @if (Model.PaymentStatus != PaymentStatus.Completed)
+                    {
+                        <li><a class="dropdown-item change-status" href="#" 
+                               data-payment-id="@Model.Id" data-status="@((int)PaymentStatus.Completed)">
+                            <i class="bi bi-check-circle text-success"></i> Mark as Completed
+                        </a></li>
+                    }
+                    @if (Model.PaymentStatus != PaymentStatus.Failed)
+                    {
+                        <li><a class="dropdown-item change-status" href="#" 
+                               data-payment-id="@Model.Id" data-status="@((int)PaymentStatus.Failed)">
+                            <i class="bi bi-x-circle text-danger"></i> Mark as Failed
+                        </a></li>
+                    }
+                    @if (Model.PaymentStatus != PaymentStatus.Pending)
+                    {
+                        <li><a class="dropdown-item change-status" href="#" 
+                               data-payment-id="@Model.Id" data-status="@((int)PaymentStatus.Pending)">
+                            <i class="bi bi-clock text-warning"></i> Mark as Pending
+                        </a></li>
+                    }
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" asp-action="Delete" asp-route-id="@Model.Id">
+                        <i class="bi bi-trash"></i> Delete Payment
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Payment Details -->
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Main Payment Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle text-primary"></i>
+                    Payment Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold">Payment ID:</td>
+                                <td>#@Model.Id</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Amount:</td>
+                                <td class="text-success h5">@Model.FormattedAmount</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Payment Method:</td>
+                                <td>
+                                    <i class="bi @Model.PaymentMethodIcon me-1"></i>
+                                    @Model.PaymentMethodDisplayName
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Status:</td>
+                                <td>
+                                    <span class="badge bg-@Model.PaymentStatusCssClass">
+                                        <i class="bi @Model.PaymentStatusIcon"></i>
+                                        @Model.PaymentStatusDisplayName
+                                    </span>
+                                </td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(Model.TransactionId))
+                            {
+                                <tr>
+                                    <td class="fw-bold">Transaction ID:</td>
+                                    <td><code>@Model.TransactionId</code></td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold">Payment Date:</td>
+                                <td>@Model.PaymentDate.ToString("MMM dd, yyyy HH:mm")</td>
+                            </tr>
+                            @if (Model.ProcessedDate.HasValue)
+                            {
+                                <tr>
+                                    <td class="fw-bold">Processed Date:</td>
+                                    <td>@Model.ProcessedDate.Value.ToString("MMM dd, yyyy HH:mm")</td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.PaymentGateway))
+                            {
+                                <tr>
+                                    <td class="fw-bold">Payment Gateway:</td>
+                                    <td>@Model.PaymentGateway</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td class="fw-bold">Created:</td>
+                                <td>@Model.CreatedDate.ToString("MMM dd, yyyy HH:mm")</td>
+                            </tr>
+                            @if (Model.UpdatedDate.HasValue)
+                            {
+                                <tr>
+                                    <td class="fw-bold">Last Updated:</td>
+                                    <td>@Model.UpdatedDate.Value.ToString("MMM dd, yyyy HH:mm")</td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.PaymentDetails))
+                {
+                    <div class="mt-3">
+                        <h6 class="fw-bold">Payment Details:</h6>
+                        <div class="bg-light p-3 rounded">
+                            @Model.PaymentDetails
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.FailureReason))
+                {
+                    <div class="mt-3">
+                        <h6 class="fw-bold text-danger">Failure Reason:</h6>
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            @Model.FailureReason
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Order Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-bag-check text-success"></i>
+                    Related Order Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold">Order ID:</td>
+                                <td>
+                                    <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId" 
+                                       class="text-decoration-none">
+                                        #@Model.OrderId
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Order Number:</td>
+                                <td>@Model.OrderNumber</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Order Date:</td>
+                                <td>@Model.OrderDate.ToString("MMM dd, yyyy HH:mm")</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Order Status:</td>
+                                <td>
+                                    <span class="badge bg-info">@Model.OrderStatusDisplayName</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold">Order Total:</td>
+                                <td class="h5 text-success">@Model.FormattedOrderTotal</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Payment Amount:</td>
+                                <td class="h6">@Model.FormattedAmount</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Difference:</td>
+                                <td class="@(Model.OrderTotal - Model.Amount == 0 ? "text-success" : "text-warning")">
+                                    @((Model.OrderTotal - Model.Amount).ToString("C"))
+                                    @if (Model.OrderTotal - Model.Amount == 0)
+                                    {
+                                        <i class="bi bi-check-circle text-success"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-exclamation-triangle text-warning"></i>
+                                    }
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.ShippingAddress))
+                {
+                    <div class="mt-3">
+                        <h6 class="fw-bold">Shipping Address:</h6>
+                        <div class="bg-light p-2 rounded">
+                            <i class="bi bi-geo-alt"></i>
+                            @Model.ShippingAddress
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        @if (Model.OrderItems.Any())
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-list-ul text-info"></i>
+                        Order Items (@Model.OrderItems.Count)
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-center">Quantity</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.OrderItems)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.ProductName</strong>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary">@item.Quantity</span>
+                                        </td>
+                                        <td class="text-end">@item.FormattedUnitPrice</td>
+                                        <td class="text-end fw-bold">@item.FormattedTotalPrice</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="3" class="text-end">Order Total:</th>
+                                    <th class="text-end text-success">@Model.FormattedOrderTotal</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Customer Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-person-circle text-primary"></i>
+                    Customer Information
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="avatar bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
+                         style="width: 60px; height: 60px; font-size: 1.5rem;">
+                        @Model.UserName.Substring(0, 1).ToUpper()
+                    </div>
+                </div>
+                <table class="table table-borderless table-sm">
+                    <tr>
+                        <td class="fw-bold">Name:</td>
+                        <td>@Model.UserName</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">Email:</td>
+                        <td>
+                            <a href="mailto:@Model.UserEmail" class="text-decoration-none">
+                                @Model.UserEmail
+                            </a>
+                        </td>
+                    </tr>
+                    @if (!string.IsNullOrEmpty(Model.UserPhone))
+                    {
+                        <tr>
+                            <td class="fw-bold">Phone:</td>
+                            <td>
+                                <a href="tel:@Model.UserPhone" class="text-decoration-none">
+                                    @Model.UserPhone
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </table>
+                <div class="d-grid gap-2">
+                    <a asp-controller="User" asp-action="Details" asp-route-id="@Model.UserId" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-person"></i>
+                        View Customer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightning text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    @if (Model.CanRefund)
+                    {
+                        <button type="button" class="btn btn-outline-info btn-sm process-refund" 
+                                data-payment-id="@Model.Id" data-amount="@Model.Amount">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            Process Refund
+                        </button>
+                    }
+                    @if (Model.CanRetry)
+                    {
+                        <button type="button" class="btn btn-outline-warning btn-sm change-status" 
+                                data-payment-id="@Model.Id" data-status="@((int)PaymentStatus.Pending)">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            Retry Payment
+                        </button>
+                    }
+                    @if (Model.CanCancel)
+                    {
+                        <button type="button" class="btn btn-outline-danger btn-sm change-status" 
+                                data-payment-id="@Model.Id" data-status="@((int)PaymentStatus.Failed)">
+                            <i class="bi bi-x-circle"></i>
+                            Cancel Payment
+                        </button>
+                    }
+                    <a href="mailto:@Model.UserEmail?subject=Payment%20#@Model.Id%20-%20@Model.OrderNumber&body=Dear%20@Model.UserName,%0A%0ARegarding%20your%20payment%20#@Model.Id%20for%20order%20@Model.OrderNumber..." 
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-envelope"></i>
+                        Email Customer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Statistics -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-graph-up text-success"></i>
+                    Quick Stats
+                </h6>
+            </div>
+            <div class="card-body">
+                @{
+                    var processingTime = Model.ProcessedDate.HasValue 
+                        ? (Model.ProcessedDate.Value - Model.PaymentDate).TotalHours 
+                        : (DateTime.UtcNow - Model.PaymentDate).TotalHours;
+                }
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <h6 class="text-muted mb-0">Processing Time</h6>
+                            <strong>
+                                @if (processingTime < 1)
+                                {
+                                    <span>@((int)(processingTime * 60))min</span>
+                                }
+                                else if (processingTime < 24)
+                                {
+                                    <span>@((int)processingTime)h</span>
+                                }
+                                else
+                                {
+                                    <span>@((int)(processingTime / 24))d</span>
+                                }
+                            </strong>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <h6 class="text-muted mb-0">Currency</h6>
+                            <strong>@Model.Currency</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Refund Modal -->
+<div class="modal fade" id="refundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Process Refund</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="refundForm">
+                    <input type="hidden" id="refundPaymentId">
+                    <div class="mb-3">
+                        <label for="refundAmount" class="form-label">Refund Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="refundAmount" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-text">Maximum: $<span id="maxRefundAmount"></span></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="refundReason" class="form-label">Reason</label>
+                        <textarea class="form-control" id="refundReason" rows="3" required
+                                  placeholder="Explain the reason for this refund..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmRefund">Process Refund</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Status change handlers
+            $('.change-status').on('click', function(e) {
+                e.preventDefault();
+                
+                const paymentId = $(this).data('payment-id');
+                const newStatus = $(this).data('status');
+                const statusText = $(this).text().trim();
+                
+                if (confirm(`Are you sure you want to change the payment status to "${statusText}"?`)) {
+                    changePaymentStatus(paymentId, newStatus);
+                }
+            });
+
+            // Refund handlers
+            $('.process-refund').on('click', function(e) {
+                e.preventDefault();
+                
+                const paymentId = $(this).data('payment-id');
+                const amount = $(this).data('amount');
+                
+                $('#refundPaymentId').val(paymentId);
+                $('#refundAmount').val(amount).attr('max', amount);
+                $('#maxRefundAmount').text(amount);
+                $('#refundModal').modal('show');
+            });
+
+            $('#confirmRefund').on('click', function() {
+                const paymentId = $('#refundPaymentId').val();
+                const amount = $('#refundAmount').val();
+                const reason = $('#refundReason').val();
+                
+                if (!amount || !reason) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+                
+                processRefund(paymentId, amount, reason);
+            });
+
+            // Functions
+            function changePaymentStatus(paymentId, newStatus) {
+                $.post('@Url.Action("ChangeStatus")', {
+                    id: paymentId,
+                    newStatus: newStatus
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                })
+                .fail(function() {
+                    alert('Error changing payment status');
+                });
+            }
+
+            function processRefund(paymentId, amount, reason) {
+                $('#confirmRefund').prop('disabled', true).text('Processing...');
+                
+                $.post('@Url.Action("ProcessRefund")', {
+                    id: paymentId,
+                    refundAmount: amount,
+                    reason: reason
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        $('#refundModal').modal('hide');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                })
+                .fail(function() {
+                    alert('Error processing refund');
+                })
+                .always(function() {
+                    $('#confirmRefund').prop('disabled', false).text('Process Refund');
+                });
+            }
+
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+
+    <style>
+        .avatar {
+            font-weight: bold;
+        }
+        
+        .badge {
+            font-size: 0.8rem;
+        }
+        
+        .table-borderless td {
+            border: none;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .table-borderless .fw-bold {
+            width: 40%;
+        }
+        
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+        
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+    </style>
+}
+

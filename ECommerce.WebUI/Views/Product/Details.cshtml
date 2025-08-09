@@ -1,0 +1,610 @@
+@model ECommerce.WebUI.Models.ProductDetailViewModel
+
+@{
+    ViewData["Title"] = Model.MetaTitle;
+    ViewData["MetaDescription"] = Model.MetaDescription;
+}
+
+@section Head {
+    <meta name="description" content="@Model.MetaDescription">
+    <meta property="og:title" content="@Model.MetaTitle">
+    <meta property="og:description" content="@Model.MetaDescription">
+    <meta property="og:image" content="@($"{Context.Request.Scheme}://{Context.Request.Host}{Model.PrimaryImageUrl}")">
+    <meta property="og:url" content="@Model.CanonicalUrl">
+    <link rel="canonical" href="@Model.CanonicalUrl">
+    
+    @if (!string.IsNullOrEmpty(ViewData["StructuredData"] as string))
+    {
+        <script type="application/ld+json">
+            @Html.Raw(ViewData["StructuredData"])
+        </script>
+    }
+}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="bg-light py-2">
+    <div class="container">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Catalog" asp-action="Index">Products</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Catalog" asp-action="Category" asp-route-slug="@Model.CategorySlug">@Model.CategoryName</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+        </ol>
+    </div>
+</nav>
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-lg-6 mb-4">
+            <div class="product-gallery">
+                <!-- Main Image -->
+                <div class="main-image mb-3">
+                    <img id="mainProductImage" 
+                         src="@Model.PrimaryImageUrl" 
+                         alt="@Model.Name" 
+                         class="img-fluid rounded shadow-sm w-100" 
+                         style="height: 500px; object-fit: cover;">
+                    
+                    @if (Model.HasDiscount)
+                    {
+                        <div class="discount-badge position-absolute top-0 start-0 m-3">
+                            <span class="badge bg-danger">-@Model.DiscountPercentage%</span>
+                        </div>
+                    }
+                    
+                    @if (!Model.InStock)
+                    {
+                        <div class="out-of-stock-overlay position-absolute top-50 start-50 translate-middle">
+                            <span class="badge bg-dark fs-6 py-2 px-3">Out of Stock</span>
+                        </div>
+                    }
+                </div>
+                
+                <!-- Image Thumbnails -->
+                @if (Model.HasGallery)
+                {
+                    <div class="thumbnail-gallery">
+                        <div class="row g-2">
+                            @for (int i = 0; i < Model.ImageUrls.Count && i < 6; i++)
+                            {
+                                <div class="col-2">
+                                    <img src="@Model.ImageUrls[i]" 
+                                         alt="@Model.Name - Image @(i + 1)" 
+                                         class="img-fluid rounded thumbnail-image @(i == 0 ? "active" : "")" 
+                                         data-main-image="@Model.ImageUrls[i]"
+                                         style="height: 80px; object-fit: cover; cursor: pointer;">
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <!-- Product Information -->
+        <div class="col-lg-6">
+            <div class="product-info">
+                <!-- Category -->
+                <div class="mb-2">
+                    <a asp-controller="Catalog" asp-action="Category" asp-route-slug="@Model.CategorySlug" 
+                       class="text-muted text-decoration-none small">
+                        <i class="bi bi-tag me-1"></i>@Model.CategoryName
+                    </a>
+                </div>
+                
+                <!-- Product Name -->
+                <h1 class="product-title mb-3">@Model.Name</h1>
+                
+                <!-- SKU -->
+                @if (!string.IsNullOrEmpty(Model.SKU))
+                {
+                    <div class="mb-2">
+                        <small class="text-muted">SKU: @Model.SKU</small>
+                    </div>
+                }
+                
+                <!-- Price -->
+                <div class="price-section mb-3">
+                    @if (Model.HasDiscount)
+                    {
+                        <div class="price-with-discount">
+                            <span class="current-price h3 text-danger me-3">@Model.FormattedDiscountPrice</span>
+                            <span class="original-price h5 text-muted text-decoration-line-through">@Model.FormattedPrice</span>
+                            <span class="savings-badge badge bg-success ms-2">Save @((Model.Price - Model.DiscountPrice!.Value).ToString("C"))</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="current-price h3 text-primary">@Model.FormattedPrice</span>
+                    }
+                </div>
+                
+                <!-- Stock Status -->
+                <div class="stock-status mb-3">
+                    @if (Model.InStock)
+                    {
+                        @if (Model.StockQuantity <= 5)
+                        {
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Only @Model.StockQuantity left in stock
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle me-1"></i>In Stock
+                            </span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">
+                            <i class="bi bi-x-circle me-1"></i>Out of Stock
+                        </span>
+                    }
+                </div>
+                
+                <!-- Description -->
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div class="product-description mb-4">
+                        <h5>Description</h5>
+                        <p class="text-muted">@Model.Description</p>
+                    </div>
+                }
+                
+                <!-- Add to Cart Form -->
+                @if (Model.InStock)
+                {
+                    <form id="addToCartForm" class="mb-4">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-auto">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <div class="input-group" style="width: 140px;">
+                                    <button type="button" class="btn btn-outline-secondary" id="decreaseQty">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" id="quantity" name="quantity" class="form-control text-center" 
+                                           value="1" min="1" max="@Model.StockQuantity">
+                                    <button type="button" class="btn btn-outline-secondary" id="increaseQty">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <button type="submit" class="btn btn-primary btn-lg w-100" id="addToCartBtn">
+                                    <i class="bi bi-cart-plus me-2"></i>Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle me-2"></i>
+                        This product is currently out of stock. Please check back later.
+                    </div>
+                }
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons mb-4">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-heart me-2"></i>Add to Wishlist
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-secondary w-100" 
+                                    onclick="navigator.share ? navigator.share({title: '@Model.Name', url: window.location.href}) : alert('Share: ' + window.location.href)">
+                                <i class="bi bi-share me-2"></i>Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product Features -->
+                <div class="product-features">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="feature-item d-flex align-items-center">
+                                <i class="bi bi-truck text-primary me-3"></i>
+                                <div>
+                                    <strong>Free Shipping</strong>
+                                    <br><small class="text-muted">On orders over $99</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="feature-item d-flex align-items-center">
+                                <i class="bi bi-arrow-repeat text-primary me-3"></i>
+                                <div>
+                                    <strong>Easy Returns</strong>
+                                    <br><small class="text-muted">30-day return policy</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="feature-item d-flex align-items-center">
+                                <i class="bi bi-shield-check text-primary me-3"></i>
+                                <div>
+                                    <strong>Secure Payment</strong>
+                                    <br><small class="text-muted">SSL secured checkout</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product Details Tabs -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="product-tabs">
+                <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="description-tab" data-bs-toggle="tab" 
+                                data-bs-target="#description" type="button" role="tab" 
+                                aria-controls="description" aria-selected="true">
+                            Description
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="specifications-tab" data-bs-toggle="tab" 
+                                data-bs-target="#specifications" type="button" role="tab" 
+                                aria-controls="specifications" aria-selected="false">
+                            Specifications
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" 
+                                data-bs-target="#reviews" type="button" role="tab" 
+                                aria-controls="reviews" aria-selected="false">
+                            Reviews <span class="badge bg-secondary ms-1">0</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" 
+                                data-bs-target="#shipping" type="button" role="tab" 
+                                aria-controls="shipping" aria-selected="false">
+                            Shipping & Returns
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content bg-white border border-top-0 p-4" id="productTabsContent">
+                    <!-- Description Tab -->
+                    <div class="tab-pane fade show active" id="description" role="tabpanel" 
+                         aria-labelledby="description-tab">
+                        @if (!string.IsNullOrEmpty(Model.LongDescription))
+                        {
+                            <div class="product-long-description">
+                                @Html.Raw(Model.LongDescription.Replace("\n", "<br>"))
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="product-long-description">
+                                @Html.Raw((Model.Description ?? "No detailed description available.").Replace("\n", "<br>"))
+                            </div>
+                        }
+                    </div>
+                    
+                    <!-- Specifications Tab -->
+                    <div class="tab-pane fade" id="specifications" role="tabpanel" 
+                         aria-labelledby="specifications-tab">
+                        <div class="specifications">
+                            <table class="table table-striped">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Product Name</strong></td>
+                                        <td>@Model.Name</td>
+                                    </tr>
+                                    @if (!string.IsNullOrEmpty(Model.SKU))
+                                    {
+                                        <tr>
+                                            <td><strong>SKU</strong></td>
+                                            <td>@Model.SKU</td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><strong>Category</strong></td>
+                                        <td>@Model.CategoryName</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Price</strong></td>
+                                        <td>@(Model.HasDiscount ? Model.FormattedDiscountPrice : Model.FormattedPrice)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Availability</strong></td>
+                                        <td>
+                                            @if (Model.InStock)
+                                            {
+                                                <span class="text-success">In Stock (@Model.StockQuantity available)</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-danger">Out of Stock</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Added Date</strong></td>
+                                        <td>@Model.CreatedDate.ToString("MMMM dd, yyyy")</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Reviews Tab -->
+                    <div class="tab-pane fade" id="reviews" role="tabpanel" 
+                         aria-labelledby="reviews-tab">
+                        <div class="reviews-section">
+                            <div class="text-center py-5">
+                                <i class="bi bi-star display-1 text-muted"></i>
+                                <h4 class="mt-3">No Reviews Yet</h4>
+                                <p class="text-muted">Be the first to review this product</p>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                    Write a Review
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Shipping Tab -->
+                    <div class="tab-pane fade" id="shipping" role="tabpanel" 
+                         aria-labelledby="shipping-tab">
+                        <div class="shipping-info">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5><i class="bi bi-truck me-2"></i>Shipping Information</h5>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Free shipping on orders over $99</li>
+                                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Standard delivery: 3-5 business days</li>
+                                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Express delivery: 1-2 business days</li>
+                                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>International shipping available</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5><i class="bi bi-arrow-repeat me-2"></i>Return Policy</h5>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>30-day return window</li>
+                                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Items must be in original condition</li>
+                                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Free return shipping</li>
+                                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Refunds processed within 3-5 days</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Related Products -->
+    @if (Model.RelatedProducts.Any())
+    {
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3 class="mb-4">Related Products</h3>
+                <div class="row">
+                    @foreach (var relatedProduct in Model.RelatedProducts)
+                    {
+                        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                            @await Html.PartialAsync("_ProductCardPartial", relatedProduct)
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewModalLabel">Write a Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm">
+                    <div class="mb-3">
+                        <label for="reviewerName" class="form-label">Your Name</label>
+                        <input type="text" class="form-control" id="reviewerName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reviewRating" class="form-label">Rating</label>
+                        <div class="rating-input">
+                            <div class="btn-group" role="group" aria-label="Rating">
+                                <input type="radio" class="btn-check" name="rating" id="rating1" value="1">
+                                <label class="btn btn-outline-warning" for="rating1">
+                                    <i class="bi bi-star"></i>
+                                </label>
+                                <input type="radio" class="btn-check" name="rating" id="rating2" value="2">
+                                <label class="btn btn-outline-warning" for="rating2">
+                                    <i class="bi bi-star"></i>
+                                </label>
+                                <input type="radio" class="btn-check" name="rating" id="rating3" value="3">
+                                <label class="btn btn-outline-warning" for="rating3">
+                                    <i class="bi bi-star"></i>
+                                </label>
+                                <input type="radio" class="btn-check" name="rating" id="rating4" value="4">
+                                <label class="btn btn-outline-warning" for="rating4">
+                                    <i class="bi bi-star"></i>
+                                </label>
+                                <input type="radio" class="btn-check" name="rating" id="rating5" value="5" checked>
+                                <label class="btn btn-outline-warning" for="rating5">
+                                    <i class="bi bi-star"></i>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reviewTitle" class="form-label">Review Title</label>
+                        <input type="text" class="form-control" id="reviewTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reviewText" class="form-label">Your Review</label>
+                        <textarea class="form-control" id="reviewText" rows="4" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submitReview">Submit Review</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Product detail page functionality
+        $(document).ready(function() {
+            // Image gallery functionality
+            $('.thumbnail-image').on('click', function() {
+                const newImageSrc = $(this).data('main-image');
+                $('#mainProductImage').attr('src', newImageSrc);
+                
+                $('.thumbnail-image').removeClass('active');
+                $(this).addClass('active');
+            });
+            
+            // Quantity controls
+            $('#decreaseQty').on('click', function() {
+                const qtyInput = $('#quantity');
+                const currentQty = parseInt(qtyInput.val());
+                const minQty = parseInt(qtyInput.attr('min'));
+                
+                if (currentQty > minQty) {
+                    qtyInput.val(currentQty - 1);
+                }
+            });
+            
+            $('#increaseQty').on('click', function() {
+                const qtyInput = $('#quantity');
+                const currentQty = parseInt(qtyInput.val());
+                const maxQty = parseInt(qtyInput.attr('max'));
+                
+                if (currentQty < maxQty) {
+                    qtyInput.val(currentQty + 1);
+                }
+            });
+            
+            // Add to cart functionality
+            $('#addToCartForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const productId = @Model.Id;
+                const quantity = parseInt($('#quantity').val());
+                const $btn = $('#addToCartBtn');
+                const originalText = $btn.html();
+                
+                // Disable button and show loading
+                $btn.prop('disabled', true).html('<i class="spinner-border spinner-border-sm me-2"></i>Adding...');
+                
+                // Add to cart via AJAX
+                addToCart(productId, quantity).then(function(response) {
+                    if (response.success) {
+                        // Show success message
+                        $btn.removeClass('btn-primary').addClass('btn-success')
+                            .html('<i class="bi bi-check-circle me-2"></i>Added to Cart!');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            $btn.removeClass('btn-success').addClass('btn-primary')
+                                .html(originalText).prop('disabled', false);
+                        }, 2000);
+                        
+                        // Update cart count in header
+                        updateCartCount(response.cartCount);
+                        
+                        // Show toast notification
+                        showToast('Product added to cart successfully!', 'success');
+                    } else {
+                        // Show error message
+                        $btn.removeClass('btn-primary').addClass('btn-danger')
+                            .html('<i class="bi bi-exclamation-circle me-2"></i>Error');
+                        
+                        setTimeout(function() {
+                            $btn.removeClass('btn-danger').addClass('btn-primary')
+                                .html(originalText).prop('disabled', false);
+                        }, 2000);
+                        
+                        showToast(response.message || 'Error adding product to cart', 'error');
+                    }
+                }).catch(function() {
+                    $btn.removeClass('btn-primary').addClass('btn-danger')
+                        .html('<i class="bi bi-exclamation-circle me-2"></i>Error');
+                    
+                    setTimeout(function() {
+                        $btn.removeClass('btn-danger').addClass('btn-primary')
+                            .html(originalText).prop('disabled', false);
+                    }, 2000);
+                    
+                    showToast('Network error. Please try again.', 'error');
+                });
+            });
+            
+            // Review form submission
+            $('#submitReview').on('click', function() {
+                // For now, just show a message
+                showToast('Thank you for your review! Reviews are coming soon.', 'info');
+                $('#reviewModal').modal('hide');
+            });
+            
+            // Rating button visual feedback
+            $('.rating-input input[type="radio"]').on('change', function() {
+                const rating = parseInt($(this).val());
+                const $labels = $('.rating-input label');
+                
+                $labels.removeClass('btn-warning').addClass('btn-outline-warning');
+                $labels.slice(0, rating).removeClass('btn-outline-warning').addClass('btn-warning');
+            });
+            
+            // Initialize rating display
+            const checkedRating = $('.rating-input input[type="radio"]:checked').val();
+            if (checkedRating) {
+                $('.rating-input input[type="radio"][value="' + checkedRating + '"]').trigger('change');
+            }
+        });
+        
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            // Create toast container if it doesn't exist
+            if (!$('#toastContainer').length) {
+                $('body').append('<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>');
+            }
+            
+            const $toast = $(toastHtml);
+            $('#toastContainer').append($toast);
+            
+            const bsToast = new bootstrap.Toast($toast[0]);
+            bsToast.show();
+            
+            // Remove toast element after it's hidden
+            $toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+    </script>
+}

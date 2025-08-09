@@ -1,0 +1,248 @@
+@model UserCreateViewModel
+@{
+    ViewData["Title"] = "Create New AppUser";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">AppUsers</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Create New User</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-person-plus text-success"></i>
+            Create New AppUser
+        </h2>
+        <p class="text-muted">Add a new user to the system</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to AppUsers
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Create Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-person-fill text-success"></i>
+                    User Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Basic Information -->
+                    <h6 class="fw-bold mb-3">Basic Information</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="UserName" class="form-label required">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@@</span>
+                                <input asp-for="UserName" class="form-control" placeholder="Enter username">
+                            </div>
+                            <span asp-validation-for="UserName" class="text-danger"></span>
+                            <div class="form-text">Username must be unique and will be used for login</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label required">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
+                                <input asp-for="Email" class="form-control" placeholder="Enter email address">
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label">First Name</label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Enter first name">
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label">Last Name</label>
+                            <input asp-for="LastName" class="form-control" placeholder="Enter last name">
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-telephone"></i>
+                                </span>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="Enter phone number">
+                            </div>
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Password Section -->
+                    <h6 class="fw-bold mb-3">Password Information</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label required">Password</label>
+                            <input asp-for="Password" class="form-control" placeholder="Enter password" type="password">
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label required">Confirm Password</label>
+                            <input asp-for="ConfirmPassword" class="form-control" placeholder="Confirm password" type="password">
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Password Requirements -->
+                    <div class="alert alert-info" role="alert">
+                        <h6 class="alert-heading">Password Requirements</h6>
+                        <ul class="mb-0">
+                            <li>At least 8 characters long</li>
+                            <li>At least one uppercase letter</li>
+                            <li>At least one lowercase letter</li>
+                            <li>At least one number</li>
+                            <li>At least one special character (recommended)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Role and Status -->
+                    <h6 class="fw-bold mb-3">Account Settings</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="Role" class="form-label required">User Role</label>
+                            <select asp-for="Role" class="form-select" asp-items="Model.RoleOptions">
+                                <option value="">-- Select Role --</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger"></span>
+                            <div class="form-text">
+                                <strong>Admin:</strong> Full system access and management<br>
+                                <strong>Customer:</strong> Shopping and order management only
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Account Status</label>
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Active Account
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                Inactive accounts cannot log in to the system
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Options -->
+                    <h6 class="fw-bold mb-3">Notification Settings</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input asp-for="SendWelcomeEmail" class="form-check-input" type="checkbox" />
+                                <label asp-for="SendWelcomeEmail" class="form-check-label">
+                                    Send welcome email to user
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                User will receive login credentials and welcome information
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-person-plus"></i>
+                                Create User
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Help Information -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-question-circle text-info"></i>
+                    Help & Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6 class="small fw-bold">Username Guidelines:</h6>
+                <ul class="small mb-3">
+                    <li>Must be unique across the system</li>
+                    <li>Used for login authentication</li>
+                    <li>Cannot be changed after creation</li>
+                    <li>Recommended: use email prefix</li>
+                </ul>
+
+                <h6 class="small fw-bold">Role Descriptions:</h6>
+                <dl class="small">
+                    <dt>Admin</dt>
+                    <dd class="mb-2">Full system access, can manage users, products, orders, and system settings</dd>
+                    
+                    <dt>Customer</dt>
+                    <dd class="mb-2">Standard user account for shopping, order management, and profile updates</dd>
+                </dl>
+
+                <h6 class="small fw-bold">Best Practices:</h6>
+                <ul class="small mb-0">
+                    <li>Use strong passwords for admin accounts</li>
+                    <li>Verify email addresses before activation</li>
+                    <li>Send welcome emails for better onboarding</li>
+                    <li>Review user roles periodically</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+}

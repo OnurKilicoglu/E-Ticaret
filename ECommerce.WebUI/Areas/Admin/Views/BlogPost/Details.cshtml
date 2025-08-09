@@ -1,0 +1,486 @@
+@model BlogPostDetailViewModel
+@{
+    ViewData["Title"] = "Blog Post Details";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Blog Posts</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-journal-text text-info"></i>
+            @Model.Title
+            <span class="badge bg-@Model.StatusCssClass ms-2">@Model.StatusDisplayName</span>
+            @if (Model.IsFeatured)
+            {
+                <span class="badge bg-@Model.FeaturedCssClass ms-1">
+                    <i class="bi bi-star-fill"></i>
+                    Featured
+                </span>
+            }
+        </h2>
+        <p class="text-muted">
+            By @Model.Author
+            @if (Model.PublishedDate.HasValue)
+            {
+                <span>• Published @Model.PublishedDate.Value.ToString("MMMM dd, yyyy")</span>
+            }
+            @if (Model.UpdatedDate.HasValue)
+            {
+                <span>• Updated @Model.UpdatedDate.Value.ToString("MMM dd, yyyy")</span>
+            }
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="bi bi-pencil"></i>
+                Edit Post
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Posts
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Blog Post Preview -->
+    <div class="col-lg-8">
+        <!-- Feature Image -->
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <div class="card mb-4">
+                <div class="card-body p-0">
+                    <img src="@Model.ImageUrl" alt="@Model.Title" 
+                         class="img-fluid w-100" style="max-height: 400px; object-fit: cover;">
+                </div>
+            </div>
+        }
+
+        <!-- Content Preview -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-journal-text"></i>
+                    Blog Post Content
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(Model.Summary))
+                {
+                    <div class="alert alert-light border-start border-primary border-4 mb-4">
+                        <h6 class="fw-bold mb-2">Summary</h6>
+                        <p class="mb-0">@Model.Summary</p>
+                    </div>
+                }
+
+                <div class="blog-content">
+                    @Html.Raw(Model.Content)
+                </div>
+            </div>
+        </div>
+
+        <!-- Tags & Category -->
+        @if (!string.IsNullOrEmpty(Model.Category) || Model.TagList.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        @if (!string.IsNullOrEmpty(Model.Category))
+                        {
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-2">Category</h6>
+                                <span class="badge bg-primary fs-6">
+                                    <i class="bi bi-folder"></i>
+                                    @Model.Category
+                                </span>
+                            </div>
+                        }
+                        
+                        @if (Model.TagList.Any())
+                        {
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-2">Tags</h6>
+                                @foreach (var tag in Model.TagList)
+                                {
+                                    <span class="badge bg-light text-dark me-1 mb-1">@tag</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- SEO Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-search"></i>
+                    SEO Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">URL Slug</h6>
+                        <p class="text-muted">
+                            @if (!string.IsNullOrEmpty(Model.Slug))
+                            {
+                                <code>/blog/@Model.Slug</code>
+                            }
+                            else
+                            {
+                                <em>No slug set</em>
+                            }
+                        </p>
+                        
+                        <h6 class="fw-bold">Meta Description</h6>
+                        <p class="text-muted">
+                            @if (!string.IsNullOrEmpty(Model.MetaDescription))
+                            {
+                                @Model.MetaDescription
+                                <small class="d-block mt-1">(@Model.MetaDescription.Length/160 characters)</small>
+                            }
+                            else
+                            {
+                                <em>No meta description</em>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Meta Keywords</h6>
+                        <p class="text-muted">
+                            @if (!string.IsNullOrEmpty(Model.MetaKeywords))
+                            {
+                                @Model.MetaKeywords
+                            }
+                            else
+                            {
+                                <em>No meta keywords</em>
+                            }
+                        </p>
+                        
+                        <h6 class="fw-bold">Reading Time</h6>
+                        <p class="text-muted">
+                            <i class="bi bi-clock"></i>
+                            @Model.ReadingTime
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Stats -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-speedometer text-primary"></i>
+                    Post Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-info mb-0">@Model.ViewCount</h4>
+                            <small class="text-muted">Views</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success mb-0">@Model.CommentCount</h4>
+                        <small class="text-muted">Comments</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <dl class="row small mb-0">
+                    <dt class="col-5">Post ID:</dt>
+                    <dd class="col-7">@Model.Id</dd>
+                    
+                    <dt class="col-5">Created:</dt>
+                    <dd class="col-7">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+                    
+                    @if (Model.PublishedDate.HasValue)
+                    {
+                        <dt class="col-5">Published:</dt>
+                        <dd class="col-7">@Model.PublishedDate.Value.ToString("MMM dd, yyyy")</dd>
+                    }
+                    
+                    @if (Model.UpdatedDate.HasValue)
+                    {
+                        <dt class="col-5">Updated:</dt>
+                        <dd class="col-7">@Model.UpdatedDate.Value.ToString("MMM dd, yyyy")</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        <!-- Status Control -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-gear text-secondary"></i>
+                    Status Control
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="status-dot bg-@Model.StatusCssClass me-3"></div>
+                    <div>
+                        <strong>@Model.StatusDisplayName</strong>
+                        <br>
+                        <small class="text-muted">
+                            @if (Model.IsPublished)
+                            {
+                                <span>Visible on website</span>
+                            }
+                            else
+                            {
+                                <span>Hidden from website</span>
+                            }
+                        </small>
+                    </div>
+                </div>
+                
+                @if (Model.IsFeatured)
+                {
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="status-dot bg-primary me-3"></div>
+                        <div>
+                            <strong>Featured Post</strong>
+                            <br>
+                            <small class="text-muted">Prominently displayed</small>
+                        </div>
+                    </div>
+                }
+                
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-@(Model.IsPublished ? "warning" : "success") btn-sm toggle-published" 
+                            data-post-id="@Model.Id">
+                        <i class="bi bi-@(Model.IsPublished ? "pause" : "play")-fill"></i>
+                        @(Model.IsPublished ? "Unpublish" : "Publish") Post
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-@(Model.IsFeatured ? "warning" : "primary") btn-sm toggle-featured" 
+                            data-post-id="@Model.Id">
+                        <i class="bi bi-star@(Model.IsFeatured ? "-fill" : "")"></i>
+                        @(Model.IsFeatured ? "Unfeature" : "Feature") Post
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-tools text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                        Edit Post
+                    </a>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Slug) && Model.IsPublished)
+                    {
+                        <a href="/blog/@Model.Slug" target="_blank" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                            View on Website
+                        </a>
+                    }
+                    
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('@Url.ActionLink("Details", "BlogPost", new { id = Model.Id })')">
+                        <i class="bi bi-clipboard"></i>
+                        Copy Admin Link
+                    </button>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Slug))
+                    {
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('https://yoursite.com/blog/@Model.Slug')">
+                            <i class="bi bi-share"></i>
+                            Copy Public Link
+                        </button>
+                    }
+                    
+                    <hr>
+                    
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                        Delete Post
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Status toggle functionality
+            $('.toggle-published').on('click', function() {
+                const postId = $(this).data('post-id');
+                
+                $.post('@Url.Action("TogglePublished")', { id: postId })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error updating published status');
+                    });
+            });
+
+            $('.toggle-featured').on('click', function() {
+                const postId = $(this).data('post-id');
+                
+                $.post('@Url.Action("ToggleFeatured")', { id: postId })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error updating featured status');
+                    });
+            });
+        });
+
+        // Copy to clipboard function
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Show temporary success message
+                const btn = event.target.closest('button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-outline-secondary');
+                
+                setTimeout(function() {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-secondary');
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+                alert('Failed to copy link to clipboard');
+            });
+        }
+    </script>
+
+    <style>
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .blog-content {
+            line-height: 1.6;
+        }
+        
+        .blog-content h1,
+        .blog-content h2,
+        .blog-content h3,
+        .blog-content h4,
+        .blog-content h5,
+        .blog-content h6 {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .blog-content p {
+            margin-bottom: 1rem;
+        }
+        
+        .blog-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.375rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .blog-content blockquote {
+            border-left: 4px solid var(--bs-primary);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            font-style: italic;
+            color: #6c757d;
+        }
+        
+        .blog-content pre {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+        }
+        
+        .blog-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        .blog-content table {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        
+        .blog-content table th,
+        .blog-content table td {
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+        }
+        
+        .blog-content table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+    </style>
+}
+

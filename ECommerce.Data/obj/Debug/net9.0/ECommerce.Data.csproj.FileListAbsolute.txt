@@ -1,0 +1,17 @@
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\bin\Debug\net9.0\ECommerce.Data.deps.json
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\bin\Debug\net9.0\ECommerce.Data.runtimeconfig.json
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\bin\Debug\net9.0\ECommerce.Data.dll
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\bin\Debug\net9.0\ECommerce.Data.pdb
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\bin\Debug\net9.0\ECommerce.Core.dll
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\bin\Debug\net9.0\ECommerce.Core.pdb
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\obj\Debug\net9.0\ECommerce.Data.csproj.AssemblyReference.cache
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\obj\Debug\net9.0\ECommerce.Data.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\obj\Debug\net9.0\ECommerce.Data.AssemblyInfoInputs.cache
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\obj\Debug\net9.0\ECommerce.Data.AssemblyInfo.cs
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\obj\Debug\net9.0\ECommerce.Data.csproj.CoreCompileInputs.cache
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\obj\Debug\net9.0\ECommerc.0B8C960C.Up2Date
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\obj\Debug\net9.0\ECommerce.Data.dll
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\obj\Debug\net9.0\refint\ECommerce.Data.dll
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\obj\Debug\net9.0\ECommerce.Data.pdb
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\obj\Debug\net9.0\ECommerce.Data.genruntimeconfig.cache
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Data\obj\Debug\net9.0\ref\ECommerce.Data.dll

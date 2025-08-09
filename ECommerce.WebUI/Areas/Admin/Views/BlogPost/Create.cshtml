@@ -1,0 +1,568 @@
+@model BlogPostCreateViewModel
+@{
+    ViewData["Title"] = "Create New Blog Post";
+}
+
+
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Blog Posts</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Create New Post</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-plus-lg text-success"></i>
+            Create New Blog Post
+        </h2>
+        <p class="text-muted">Write and publish a new blog post or article</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Posts
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Create Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-journal-text text-success"></i>
+                    Blog Post Content
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Basic Information -->
+                    <h6 class="fw-bold mb-3">Basic Information</h6>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label required">Title</label>
+                        <input asp-for="Title" class="form-control" placeholder="Enter blog post title" id="titleInput">
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                        <div class="form-text">The main title of your blog post</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Summary" class="form-label">Summary</label>
+                        <textarea asp-for="Summary" class="form-control" rows="3" 
+                                  placeholder="Brief summary or excerpt (optional)"></textarea>
+                        <span asp-validation-for="Summary" class="text-danger"></span>
+                        <div class="form-text">A brief description that appears in post previews</div>
+                    </div>
+
+                    <!-- Content Editor -->
+                    <h6 class="fw-bold mb-3 mt-4">Content</h6>
+                    
+                    <div class="mb-4">
+                        <label asp-for="Content" class="form-label required">Post Content</label>
+                        <textarea asp-for="Content" class="form-control" id="contentEditor" rows="15"></textarea>
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                        <div class="form-text">The main content of your blog post (rich text editor)</div>
+                    </div>
+
+                    <!-- Feature Image -->
+                    <h6 class="fw-bold mb-3">Feature Image</h6>
+                    
+                    <div class="mb-4">
+                        <label asp-for="ImageFile" class="form-label">Feature Image</label>
+                        <input asp-for="ImageFile" type="file" class="form-control" 
+                               accept="image/*" id="imageFile">
+                        <span asp-validation-for="ImageFile" class="text-danger"></span>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle"></i>
+                            Upload a feature image for your blog post. Supported formats: JPG, PNG, GIF, WebP. Max size: 2MB.
+                        </div>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div class="mb-4" id="imagePreviewContainer" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Image Preview</h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <img id="imagePreview" src="" alt="Feature Image Preview" 
+                                     class="img-fluid" style="max-height: 300px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Author & Category -->
+                    <h6 class="fw-bold mb-3">Organization</h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Author" class="form-label required">Author</label>
+                            <input asp-for="Author" class="form-control" placeholder="Author name" 
+                                   list="authorSuggestions">
+                            <datalist id="authorSuggestions">
+                                @foreach (var author in Model.AuthorOptions)
+                                {
+                                    <option value="@author.Value">@author.Text</option>
+                                }
+                            </datalist>
+                            <span asp-validation-for="Author" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Category" class="form-label">Category</label>
+                            <input asp-for="Category" class="form-control" placeholder="Blog category" 
+                                   list="categorySuggestions">
+                            <datalist id="categorySuggestions">
+                                @foreach (var category in Model.CategoryOptions)
+                                {
+                                    <option value="@category.Value">@category.Text</option>
+                                }
+                            </datalist>
+                            <span asp-validation-for="Category" class="text-danger"></span>
+                            <div class="form-text">Optional category for organization</div>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="mb-4">
+                        <label asp-for="Tags" class="form-label">Tags</label>
+                        <input asp-for="Tags" class="form-control" placeholder="tag1, tag2, tag3..." 
+                               id="tagsInput">
+                        <span asp-validation-for="Tags" class="text-danger"></span>
+                        <div class="form-text">
+                            Comma-separated tags for better categorization and SEO
+                        </div>
+                        @if (Model.TagOptions.Any())
+                        {
+                            <div class="mt-2">
+                                <small class="text-muted">Popular tags:</small>
+                                @foreach (var tag in Model.TagOptions.Take(10))
+                                {
+                                    <button type="button" class="btn btn-outline-secondary btn-sm me-1 mt-1 tag-suggestion" 
+                                            data-tag="@tag">@tag</button>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Publishing Options -->
+                    <h6 class="fw-bold mb-3">Publishing Options</h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsPublished" class="form-check-input" type="checkbox" id="publishedToggle" />
+                                <label asp-for="IsPublished" class="form-check-label">
+                                    Publish Immediately
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                Uncheck to save as draft
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsFeatured" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsFeatured" class="form-check-label">
+                                    Featured Post
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                Featured posts appear prominently
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4" id="publishDateContainer" style="display: none;">
+                        <label asp-for="PublishedDate" class="form-label">Publish Date</label>
+                        <input asp-for="PublishedDate" type="datetime-local" class="form-control">
+                        <span asp-validation-for="PublishedDate" class="text-danger"></span>
+                        <div class="form-text">Schedule when this post should be published</div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-success" id="createPostBtn">
+                                <i class="bi bi-check-lg"></i>
+                                <span id="createBtnText">Create Post</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- SEO Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-search text-primary"></i>
+                    SEO Settings
+                </h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
+                    <div class="mb-3">
+                        <label asp-for="Slug" class="form-label">URL Slug</label>
+                        <div class="input-group">
+                            <input asp-for="Slug" class="form-control" placeholder="auto-generated" id="slugInput">
+                            <button type="button" class="btn btn-outline-secondary" id="generateSlugBtn">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Slug" class="text-danger"></span>
+                        <div class="form-text">
+                            <small>URL: /blog/<span id="slugPreview">your-post-slug</span></small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="MetaDescription" class="form-label">Meta Description</label>
+                        <textarea asp-for="MetaDescription" class="form-control" rows="3" 
+                                  placeholder="Brief description for search engines" maxlength="160"></textarea>
+                        <span asp-validation-for="MetaDescription" class="text-danger"></span>
+                        <div class="form-text">
+                            <small><span id="metaDescLength">0</span>/160 characters</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="MetaKeywords" class="form-label">Meta Keywords</label>
+                        <input asp-for="MetaKeywords" class="form-control" placeholder="keyword1, keyword2, keyword3">
+                        <span asp-validation-for="MetaKeywords" class="text-danger"></span>
+                        <div class="form-text">Comma-separated keywords</div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Guidelines -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-warning"></i>
+                    Writing Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6 class="small fw-bold">Content Best Practices:</h6>
+                <ul class="small mb-3">
+                    <li>Use clear, engaging titles</li>
+                    <li>Write compelling summaries</li>
+                    <li>Structure content with headings</li>
+                    <li>Include relevant images</li>
+                    <li>Use tags for better discovery</li>
+                </ul>
+
+                <h6 class="small fw-bold">SEO Tips:</h6>
+                <ul class="small mb-3">
+                    <li>Write descriptive URLs (slugs)</li>
+                    <li>Craft meta descriptions under 160 chars</li>
+                    <li>Use relevant keywords naturally</li>
+                    <li>Optimize images with alt text</li>
+                </ul>
+
+                <h6 class="small fw-bold">Image Guidelines:</h6>
+                <ul class="small mb-0">
+                    <li>Recommended: 1200x630px</li>
+                    <li>Format: JPG, PNG, WebP</li>
+                    <li>Max size: 2MB</li>
+                    <li>Use descriptive filenames</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-speedometer text-info"></i>
+                    Content Stats
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h5 class="text-primary mb-0" id="wordCount">0</h5>
+                            <small class="text-muted">Words</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="text-info mb-0" id="readingTime">0 min</h5>
+                        <small class="text-muted">Read Time</small>
+                    </div>
+                </div>
+                
+                <hr>
+                <div class="text-center">
+                    <small class="text-muted">
+                        <i class="bi bi-clock"></i>
+                        Estimated reading time based on 200 words/min
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <!-- TinyMCE CSS -->
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        #imagePreviewContainer {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .tag-suggestion {
+            cursor: pointer;
+        }
+        
+        .tag-suggestion:hover {
+            background-color: var(--bs-secondary);
+            color: white;
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <!-- TinyMCE -->
+    <script src="https://cdn.tiny.cloud/1/9ozu8ojmm5o0vsh4qqy6cgz5wxlr5lgmhlpuojjy1m1t7wn1/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize TinyMCE
+            tinymce.init({
+                selector: '#contentEditor',
+                height: 400,
+                menubar: false,
+                plugins: [
+                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                ],
+                toolbar: 'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | outdent indent | numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen preview save print | insertfile image media link anchor codesample | ltr rtl',
+                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }',
+                setup: function (editor) {
+                    editor.on('keyup', function () {
+                        updateWordCount();
+                    });
+                    editor.on('change', function () {
+                        updateWordCount();
+                    });
+                }
+            });
+
+            // Image preview functionality
+            $('#imageFile').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    // Validate file size and type
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('File size must be less than 2MB');
+                        $(this).val('');
+                        $('#imagePreviewContainer').hide();
+                        return;
+                    }
+
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                    if (!allowedTypes.includes(file.type)) {
+                        alert('Please select a valid image file (JPG, PNG, GIF, or WebP)');
+                        $(this).val('');
+                        $('#imagePreviewContainer').hide();
+                        return;
+                    }
+
+                    // Show preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#imagePreview').attr('src', e.target.result);
+                        $('#imagePreviewContainer').show();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#imagePreviewContainer').hide();
+                }
+            });
+
+            // Auto-generate slug from title
+            $('#titleInput').on('input', function() {
+                const title = $(this).val();
+                if (title && $('#slugInput').val() === '') {
+                    generateSlugFromTitle(title);
+                }
+                updateSlugPreview();
+            });
+
+            // Manual slug generation
+            $('#generateSlugBtn').on('click', function() {
+                const title = $('#titleInput').val();
+                if (title) {
+                    generateSlugFromTitle(title);
+                }
+            });
+
+            // Slug input changes
+            $('#slugInput').on('input', function() {
+                updateSlugPreview();
+                checkSlugAvailability();
+            });
+
+            // Meta description character count
+            $('#MetaDescription').on('input', function() {
+                const length = $(this).val().length;
+                $('#metaDescLength').text(length);
+                
+                if (length > 160) {
+                    $('#metaDescLength').addClass('text-danger');
+                } else if (length > 140) {
+                    $('#metaDescLength').addClass('text-warning').removeClass('text-danger');
+                } else {
+                    $('#metaDescLength').removeClass('text-danger text-warning');
+                }
+            });
+
+            // Tag suggestions
+            $('.tag-suggestion').on('click', function() {
+                const tag = $(this).data('tag');
+                const currentTags = $('#tagsInput').val();
+                
+                if (currentTags === '') {
+                    $('#tagsInput').val(tag);
+                } else if (!currentTags.split(',').map(t => t.trim()).includes(tag)) {
+                    $('#tagsInput').val(currentTags + ', ' + tag);
+                }
+            });
+
+            // Published status toggle
+            $('#publishedToggle').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#publishDateContainer').show();
+                    $('#createBtnText').text('Publish Post');
+                } else {
+                    $('#publishDateContainer').hide();
+                    $('#createBtnText').text('Save Draft');
+                }
+            });
+
+            // Form validation
+            $('form').on('submit', function(e) {
+                const title = $('#titleInput').val().trim();
+                const content = tinymce.get('contentEditor').getContent();
+                const author = $('#Author').val().trim();
+
+                if (!title) {
+                    e.preventDefault();
+                    alert('Please enter a title for the blog post.');
+                    $('#titleInput').focus();
+                    return false;
+                }
+
+                if (!content || content.trim() === '') {
+                    e.preventDefault();
+                    alert('Please enter content for the blog post.');
+                    tinymce.get('contentEditor').focus();
+                    return false;
+                }
+
+                if (!author) {
+                    e.preventDefault();
+                    alert('Please enter an author name.');
+                    $('#Author').focus();
+                    return false;
+                }
+
+                // Update hidden content field with TinyMCE content
+                $('#contentEditor').val(content);
+            });
+
+            // Initialize word count
+            updateWordCount();
+            updateSlugPreview();
+
+            // Functions
+            function generateSlugFromTitle(title) {
+                $.get('@Url.Action("GenerateSlug")', { title: title })
+                    .done(function(response) {
+                        if (response.success) {
+                            $('#slugInput').val(response.slug);
+                            updateSlugPreview();
+                        }
+                    });
+            }
+
+            function updateSlugPreview() {
+                const slug = $('#slugInput').val() || 'your-post-slug';
+                $('#slugPreview').text(slug);
+            }
+
+            function checkSlugAvailability() {
+                const slug = $('#slugInput').val();
+                if (slug) {
+                    $.get('@Url.Action("CheckSlug")', { slug: slug })
+                        .done(function(response) {
+                            // You could add visual feedback here
+                            console.log('Slug available:', response.available);
+                        });
+                }
+            }
+
+            function updateWordCount() {
+                try {
+                    const content = tinymce.get('contentEditor') ? tinymce.get('contentEditor').getContent({ format: 'text' }) : '';
+                    const wordCount = content.trim() === '' ? 0 : content.trim().split(/\s+/).length;
+                    const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+                    
+                    $('#wordCount').text(wordCount);
+                    $('#readingTime').text(readingTime + ' min');
+                } catch (e) {
+                    // TinyMCE not ready yet
+                    $('#wordCount').text('0');
+                    $('#readingTime').text('0 min');
+                }
+            }
+        });
+    </script>
+}
+

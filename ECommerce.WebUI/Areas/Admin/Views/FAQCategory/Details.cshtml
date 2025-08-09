@@ -1,0 +1,438 @@
+@model FAQCategoryDetailViewModel
+@{
+    ViewData["Title"] = "FAQ Category Details";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">FAQ Categories</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="@Model.DisplayIcon text-info"></i>
+            @Model.Name
+            <span class="badge bg-@Model.StatusCssClass ms-2">@Model.StatusDisplayName</span>
+        </h2>
+        <p class="text-muted">Detailed information and statistics for this FAQ category</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="bi bi-pencil"></i>
+                Edit Category
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Categories
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Category Overview -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle-fill"></i>
+                    Category Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2 text-center">
+                        <div class="category-icon-large mb-3">
+                            @if (!string.IsNullOrEmpty(Model.Icon))
+                            {
+                                @if (Model.Icon.StartsWith("bi "))
+                                {
+                                    <i class="@Model.Icon" style="font-size: 4rem; color: var(--bs-primary);"></i>
+                                }
+                                else
+                                {
+                                    <img src="@Model.Icon" alt="@Model.Name" style="width: 64px; height: 64px; object-fit: cover; border-radius: 0.5rem;">
+                                }
+                            }
+                            else
+                            {
+                                <i class="bi bi-tag" style="font-size: 4rem; color: var(--bs-muted);"></i>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-10">
+                        <h3 class="text-primary">@Model.Name</h3>
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <p class="lead">@Model.Description</p>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No description provided for this category.</p>
+                        }
+                        
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-list-ul text-primary me-2"></i>
+                                    <div>
+                                        <div class="fw-bold">@Model.FAQCount</div>
+                                        <small class="text-muted">Total FAQs</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <div>
+                                        <div class="fw-bold">@Model.ActiveFAQCount</div>
+                                        <small class="text-muted">Active FAQs</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-eye text-info me-2"></i>
+                                    <div>
+                                        <div class="fw-bold">@Model.TotalViews</div>
+                                        <small class="text-muted">Total Views</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-hand-thumbs-up text-warning me-2"></i>
+                                    <div>
+                                        <div class="fw-bold">@Model.TotalHelpfulVotes</div>
+                                        <small class="text-muted">Helpful Votes</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <!-- Category Statistics -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-graph-up text-success"></i>
+                    Performance Metrics
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Efficiency Rate -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">Efficiency Rate</small>
+                        <small class="text-muted">@Model.EfficiencyRate.ToString("F1")%</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: @Model.EfficiencyRate%"></div>
+                    </div>
+                </div>
+
+                <!-- Average Helpfulness -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">Avg Helpfulness</small>
+                        <small class="text-muted">@Model.AverageHelpfulness.ToString("F1")</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        @{
+                            var helpfulnessPercentage = Math.Min(100, Model.AverageHelpfulness * 10);
+                        }
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: @helpfulnessPercentage%"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="row text-center mt-3">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h6 class="text-primary mb-0">@Model.DisplayOrder</h6>
+                            <small class="text-muted">Display Order</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="@(Model.IsActive ? "text-success" : "text-warning") mb-0">
+                            @Model.StatusDisplayName
+                        </h6>
+                        <small class="text-muted">Status</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FAQs in Category -->
+<div class="row">
+    <div class="col-lg-6">
+        <!-- Recent FAQs -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-clock text-primary"></i>
+                    Recent FAQs
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentFAQs.Any())
+                {
+                    @foreach (var faq in Model.RecentFAQs)
+                    {
+                        <div class="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    <a asp-controller="FAQ" asp-action="Details" asp-route-id="@faq.Id" 
+                                       class="text-decoration-none">
+                                        @faq.TruncatedQuestion
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar"></i>
+                                    @faq.CreatedDate.ToString("MMM dd, yyyy")
+                                </small>
+                            </div>
+                            <div class="ms-3">
+                                <span class="badge bg-@(faq.IsActive ? "success" : "warning")">
+                                    @(faq.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </div>
+                        </div>
+                    }
+                    <div class="text-center">
+                        <a asp-controller="FAQ" asp-action="Index" asp-route-categoryId="@Model.Id" 
+                           class="btn btn-sm btn-outline-primary">
+                            View All FAQs in Category
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-3">
+                        <i class="bi bi-question-circle display-4 text-muted"></i>
+                        <p class="text-muted mb-2">No FAQs in this category yet</p>
+                        <a asp-controller="FAQ" asp-action="Create" asp-route-categoryId="@Model.Id" 
+                           class="btn btn-sm btn-primary">
+                            Create First FAQ
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <!-- Popular FAQs -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-star text-warning"></i>
+                    Most Popular FAQs
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.PopularFAQs.Any())
+                {
+                    @foreach (var faq in Model.PopularFAQs)
+                    {
+                        <div class="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    <a asp-controller="FAQ" asp-action="Details" asp-route-id="@faq.Id" 
+                                       class="text-decoration-none">
+                                        @faq.TruncatedQuestion
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-eye"></i>
+                                    @faq.ViewCount views
+                                    <i class="bi bi-hand-thumbs-up ms-2"></i>
+                                    @faq.HelpfulCount helpful
+                                </small>
+                            </div>
+                            <div class="ms-3">
+                                <span class="badge bg-@(faq.IsActive ? "success" : "warning")">
+                                    @(faq.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-3">
+                        <i class="bi bi-graph-up display-4 text-muted"></i>
+                        <p class="text-muted mb-0">No popular FAQs yet</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Information -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-info-circle"></i>
+            Category Information
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="fw-bold">Basic Information</h6>
+                <dl class="row">
+                    <dt class="col-sm-4">Category ID:</dt>
+                    <dd class="col-sm-8">@Model.Id</dd>
+                    
+                    <dt class="col-sm-4">Name:</dt>
+                    <dd class="col-sm-8">@Model.Name</dd>
+                    
+                    <dt class="col-sm-4">Description:</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            @Model.Description
+                        }
+                        else
+                        {
+                            <em class="text-muted">No description</em>
+                        }
+                    </dd>
+                    
+                    <dt class="col-sm-4">Icon:</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.Icon))
+                        {
+                            <i class="@Model.DisplayIcon me-2"></i>
+                            <code>@Model.Icon</code>
+                        }
+                        else
+                        {
+                            <em class="text-muted">No icon</em>
+                        }
+                    </dd>
+                    
+                    <dt class="col-sm-4">Display Order:</dt>
+                    <dd class="col-sm-8">@Model.DisplayOrder</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold">Statistics & Performance</h6>
+                <dl class="row">
+                    <dt class="col-sm-5">Total FAQs:</dt>
+                    <dd class="col-sm-7">@Model.FAQCount</dd>
+                    
+                    <dt class="col-sm-5">Active FAQs:</dt>
+                    <dd class="col-sm-7">@Model.ActiveFAQCount</dd>
+                    
+                    <dt class="col-sm-5">Total Views:</dt>
+                    <dd class="col-sm-7">@Model.TotalViews</dd>
+                    
+                    <dt class="col-sm-5">Helpful Votes:</dt>
+                    <dd class="col-sm-7">@Model.TotalHelpfulVotes</dd>
+                    
+                    <dt class="col-sm-5">Efficiency Rate:</dt>
+                    <dd class="col-sm-7">@Model.EfficiencyRate.ToString("F1")%</dd>
+                    
+                    <dt class="col-sm-5">Avg Helpfulness:</dt>
+                    <dd class="col-sm-7">@Model.AverageHelpfulness.ToString("F1")</dd>
+                </dl>
+            </div>
+        </div>
+        
+        <!-- Timestamps -->
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="fw-bold">Created</h6>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-calendar-plus"></i>
+                    @Model.CreatedDate.ToString("MMMM dd, yyyy 'at' hh:mm tt")
+                </p>
+            </div>
+            @if (Model.UpdatedDate.HasValue)
+            {
+                <div class="col-md-6">
+                    <h6 class="fw-bold">Last Updated</h6>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-calendar-check"></i>
+                        @Model.UpdatedDate.Value.ToString("MMMM dd, yyyy 'at' hh:mm tt")
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Button -->
+<div class="position-fixed" style="bottom: 2rem; right: 2rem; z-index: 1000;">
+    <div class="btn-group-vertical" role="group">
+        <button type="button" class="btn btn-primary rounded-circle p-3 mb-2 toggle-status" 
+                data-category-id="@Model.Id" title="@(Model.IsActive ? "Deactivate" : "Activate") Category">
+            <i class="bi bi-@(Model.IsActive ? "pause" : "play")-fill fs-5"></i>
+        </button>
+        <a asp-action="Edit" asp-route-id="@Model.Id" 
+           class="btn btn-success rounded-circle p-3 mb-2" title="Edit Category">
+            <i class="bi bi-pencil fs-5"></i>
+        </a>
+        <a asp-controller="FAQ" asp-action="Create" asp-route-categoryId="@Model.Id" 
+           class="btn btn-info rounded-circle p-3" title="Add FAQ to Category">
+            <i class="bi bi-plus-lg fs-5"></i>
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Quick status toggle
+            $('.toggle-status').on('click', function() {
+                const categoryId = $(this).data('category-id');
+                
+                $.post('@Url.Action("ToggleStatus")', { id: categoryId })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error updating category status');
+                    });
+            });
+        });
+    </script>
+
+    <style>
+        .category-icon-large {
+            padding: 1rem;
+        }
+    </style>
+}
+
+

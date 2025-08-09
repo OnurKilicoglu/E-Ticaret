@@ -1,0 +1,434 @@
+@using System.Linq
+@model ECommerce.WebUI.Models.FaqPageViewModel
+
+@{
+    ViewData["Title"] = "Frequently Asked Questions";
+}
+
+<!-- Page Header -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-5 fw-bold text-primary">@ViewData["Title"]</h1>
+                <p class="lead text-muted">Find answers to common questions about our products and services</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <!-- Search and Filters -->
+            <div class="col-lg-3 mb-4">
+                <div class="sticky-top" style="top: 2rem;">
+                    <!-- Search -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="bi bi-search text-primary"></i>
+                                Search FAQs
+                            </h6>
+                            <form method="get">
+                                <input type="hidden" name="categoryId" value="@Model.SelectedCategoryId" />
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="search" 
+                                           value="@Model.Search" placeholder="Search questions..." />
+                                    <button class="btn btn-outline-primary" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Categories -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-tags text-primary"></i>
+                                Categories
+                            </h6>
+                        </div>
+                        <div class="list-group list-group-flush">
+                            <a asp-action="Index" class="list-group-item list-group-item-action @(Model.SelectedCategoryId == null ? "active" : "")">
+                                <i class="bi bi-list me-2"></i>
+                                All Categories
+                            </a>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <a asp-action="Index" asp-route-categoryId="@category.Id" asp-route-search="@Model.Search"
+                                   class="list-group-item list-group-item-action @(Model.SelectedCategoryId == category.Id ? "active" : "")">
+                                    @if (!string.IsNullOrEmpty(category.Icon))
+                                    {
+                                        <i class="@category.Icon me-2"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-tag me-2"></i>
+                                    }
+                                    @category.Name
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ List -->
+            <div class="col-lg-9">
+                @if (Model.Faqs.Any())
+                {
+                    <!-- Active Filters -->
+                    @if (Model.SelectedCategoryId.HasValue || !string.IsNullOrEmpty(Model.Search))
+                    {
+                        <div class="d-flex flex-wrap gap-2 mb-4">
+                            <span class="text-muted">Showing results for:</span>
+                            @if (Model.SelectedCategoryId.HasValue)
+                            {
+                                var selectedCategory = Model.Categories.FirstOrDefault(c => c.Id == Model.SelectedCategoryId);
+                                if (selectedCategory != null)
+                                {
+                                    <span class="badge bg-primary">
+                                        Category: @selectedCategory.Name
+                                        <a asp-action="Index" asp-route-search="@Model.Search" class="text-white ms-1">×</a>
+                                    </span>
+                                }
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Search))
+                            {
+                                <span class="badge bg-info">
+                                    Search: "@Model.Search"
+                                    <a asp-action="Index" asp-route-categoryId="@Model.SelectedCategoryId" class="text-white ms-1">×</a>
+                                </span>
+                            }
+                            <a asp-action="Index" class="btn btn-sm btn-outline-secondary">Clear All</a>
+                        </div>
+                    }
+
+                    <!-- FAQ Accordion -->
+                    <div class="accordion" id="faqAccordion">
+                        @for (int i = 0; i < Model.Faqs.Count; i++)
+                        {
+                            var faq = Model.Faqs[i];
+                            <div class="accordion-item" data-faq-id="@faq.Id">
+                                <h2 class="accordion-header" id="heading@(faq.Id)">
+                                    <button class="accordion-button @(i == 0 ? "" : "collapsed")" 
+                                            type="button" 
+                                            data-bs-toggle="collapse" 
+                                            data-bs-target="#collapse@(faq.Id)" 
+                                            aria-expanded="@(i == 0 ? "true" : "false")" 
+                                            aria-controls="collapse@(faq.Id)">
+                                        <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                            <span class="fw-semibold">@faq.Question</span>
+                                            <div class="ms-3">
+                                                @if (faq.Category != null)
+                                                {
+                                                    <span class="badge bg-secondary me-2">@faq.Category.Name</span>
+                                                }
+                                                <small class="text-muted">@faq.ViewCount views</small>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse@(faq.Id)" 
+                                     class="accordion-collapse collapse @(i == 0 ? "show" : "")" 
+                                     aria-labelledby="heading@(faq.Id)" 
+                                     data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        <div class="faq-content">
+                                            <div class="mb-4">
+                                                @Html.Raw(faq.Answer.Replace("\n", "<br>"))
+                                            </div>
+
+                                            <!-- Feedback -->
+                                            <div class="border-top pt-3">
+                                                <div class="row align-items-center">
+                                                    <div class="col-md-6">
+                                                        <small class="text-muted">Was this helpful?</small>
+                                                        <div class="mt-2">
+                                                            <button class="btn btn-sm btn-outline-success me-2 helpful-btn" 
+                                                                    data-faq-id="@faq.Id" data-helpful="true">
+                                                                <i class="bi bi-hand-thumbs-up me-1"></i>
+                                                                Yes (@faq.HelpfulCount)
+                                                            </button>
+                                                            <button class="btn btn-sm btn-outline-danger helpful-btn" 
+                                                                    data-faq-id="@faq.Id" data-helpful="false">
+                                                                <i class="bi bi-hand-thumbs-down me-1"></i>
+                                                                No (@faq.NotHelpfulCount)
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 text-end">
+                                                        @if (!string.IsNullOrEmpty(faq.Author))
+                                                        {
+                                                            <small class="text-muted">
+                                                                <i class="bi bi-person me-1"></i>
+                                                                @faq.Author
+                                                            </small>
+                                                        }
+                                                        @if (!string.IsNullOrEmpty(faq.Tags))
+                                                        {
+                                                            <div class="mt-1">
+                                                                @foreach (var tag in faq.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()))
+                                                                {
+                                                                    <span class="badge bg-light text-dark me-1">#@tag</span>
+                                                                }
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-12 text-end">
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-calendar me-1"></i>
+                                                            Updated @faq.UpdatedDate?.ToShortDateString()
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <!-- No Results -->
+                    <div class="text-center py-5">
+                        <i class="bi bi-question-circle display-1 text-muted"></i>
+                        <h4 class="mt-3">No FAQs available</h4>
+                        @if (!string.IsNullOrEmpty(Model.Search) || Model.SelectedCategoryId.HasValue)
+                        {
+                            <p class="text-muted">
+                                No FAQs match your search criteria.
+                                <br>
+                                <a asp-action="Index" class="btn btn-link">View all FAQs</a>
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="text-muted">
+                                No FAQs are currently available.
+                                <br>
+                                Please check back later or <a asp-controller="Contact" asp-action="Index">contact us</a> for assistance.
+                            </p>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+@if (Model.Faqs.Any())
+{
+    <section class="bg-light py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h3>Still Have Questions?</h3>
+                    <p class="text-muted mb-4">
+                        Can't find the answer you're looking for? Our support team is here to help.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <a asp-controller="Contact" asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-envelope me-2"></i>Contact Support
+                        </a>
+                        <a href="tel:+1-555-123-4567" class="btn btn-outline-primary">
+                            <i class="bi bi-telephone me-2"></i>Call Us
+                        </a>
+                        <a asp-controller="Blog" asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-journal me-2"></i>Read Our Blog
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@section Styles {
+    <style>
+        .faq-content {
+            line-height: 1.7;
+            color: #495057;
+        }
+        
+        .accordion-button {
+            padding: 1.25rem 1.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .accordion-button:not(.collapsed) {
+            background-color: var(--bs-primary);
+            color: white;
+            box-shadow: none;
+        }
+        
+        .accordion-button:not(.collapsed)::after {
+            filter: brightness(0) invert(1);
+        }
+        
+        .accordion-button:focus {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .accordion-body {
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+        }
+        
+        .accordion-item {
+            border: 1px solid #dee2e6;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem !important;
+            overflow: hidden;
+        }
+        
+        .accordion-item:first-of-type .accordion-button {
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+        
+        .accordion-item:last-of-type .accordion-button.collapsed {
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+        }
+        
+        .helpful-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .helpful-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .helpful-btn:disabled {
+            opacity: 0.6;
+            transform: none;
+        }
+        
+        .badge {
+            font-size: 0.75rem;
+        }
+        
+        /* Mobile Responsiveness */
+        @@media (max-width: 768px) {
+            .sticky-top {
+                position: relative !important;
+                top: auto !important;
+            }
+            
+            .accordion-button {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+            
+            .accordion-body {
+                padding: 1rem;
+            }
+            
+            .d-flex.gap-3 {
+                gap: 0.5rem !important;
+            }
+            
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @@media (max-width: 576px) {
+            .display-5 {
+                font-size: 2rem;
+            }
+            
+            .accordion-button .badge {
+                display: none;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Handle helpful/not helpful feedback
+            $('.helpful-btn').on('click', function() {
+                const faqId = $(this).data('faq-id');
+                const isHelpful = $(this).data('helpful');
+                const button = $(this);
+                
+                // Disable both buttons immediately to prevent double-clicking
+                button.closest('.row').find('.helpful-btn').prop('disabled', true);
+                
+                // AJAX call to mark FAQ as helpful
+                $.post('@Url.Action("MarkHelpful")', { 
+                    id: faqId, 
+                    isHelpful: isHelpful 
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        // Update the count in the button
+                        const currentCount = parseInt(button.text().match(/\d+/)[0]) || 0;
+                        const newText = button.html().replace(/\(\d+\)/, `(${currentCount + 1})`);
+                        button.html(newText);
+                        
+                        showToast('Thank you for your feedback!', 'success');
+                    } else {
+                        showToast(response.message || 'Error recording feedback', 'warning');
+                        button.closest('.row').find('.helpful-btn').prop('disabled', false);
+                    }
+                })
+                .fail(function() {
+                    showToast('Error recording feedback', 'danger');
+                    button.closest('.row').find('.helpful-btn').prop('disabled', false);
+                });
+            });
+            
+            // Smooth scrolling for accordion
+            $('#faqAccordion').on('shown.bs.collapse', function (e) {
+                const targetAccordion = $(e.target).closest('.accordion-item');
+                $('html, body').animate({
+                    scrollTop: targetAccordion.offset().top - 100
+                }, 500);
+            });
+        });
+        
+        function showToast(message, type) {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert" style="min-width: 300px;">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            // Create toast container if it doesn't exist
+            if (!$('#toastContainer').length) {
+                $('body').append('<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1060;"></div>');
+            }
+            
+            const $toast = $(toastHtml);
+            $('#toastContainer').append($toast);
+            
+            const bsToast = new bootstrap.Toast($toast[0]);
+            bsToast.show();
+            
+            // Remove toast element after it's hidden
+            $toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+    </script>
+}

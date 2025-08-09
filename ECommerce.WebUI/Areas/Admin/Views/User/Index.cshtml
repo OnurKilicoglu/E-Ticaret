@@ -1,0 +1,333 @@
+@model UserListViewModel
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2 class="mb-0">
+            <i class="bi bi-people text-primary"></i>
+            User Management
+        </h2>
+        <p class="text-muted">Manage system users and their roles</p>
+    </div>
+    <div class="col-md-6 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Create" class="btn btn-success">
+                <i class="bi bi-person-plus"></i>
+                Add New User
+            </a>
+            <a asp-action="Export" class="btn btn-outline-success">
+                <i class="bi bi-download"></i>
+                Export CSV
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Quick Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.TotalUsers</h5>
+                <p class="card-text">Total Users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.ActiveUsers</h5>
+                <p class="card-text">Active</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center bg-secondary text-white">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.InactiveUsers</h5>
+                <p class="card-text">Inactive</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center bg-danger text-white">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.AdminUsers</h5>
+                <p class="card-text">Admins</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.CustomerUsers</h5>
+                <p class="card-text">Customers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center bg-warning text-dark">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.NewUsersToday</h5>
+                <p class="card-text">New Today</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="searchTerm" class="form-label">Search Users</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" id="searchTerm" name="searchTerm" 
+                           value="@Model.SearchTerm" placeholder="Username, email, name...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label for="role" class="form-label">Role</label>
+                <select class="form-select" id="role" name="role">
+                    <option value="">All Roles</option>
+                    @foreach (var roleOption in Model.RoleOptions)
+                    {
+                        <option value="@roleOption.Value" selected="@(roleOption.Value == Model.Role?.ToString())">
+                            @roleOption.Text
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="isActive" class="form-label">Status</label>
+                <select class="form-select" id="isActive" name="isActive">
+                    <option value="">All Status</option>
+                    @foreach (var statusOption in Model.StatusOptions)
+                    {
+                        <option value="@statusOption.Value" selected="@(statusOption.Value == Model.IsActive?.ToString())">
+                            @statusOption.Text
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="fromDate" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="fromDate" name="fromDate" 
+                       value="@(Model.FromDate?.ToString("yyyy-MM-dd"))">
+            </div>
+            <div class="col-md-2">
+                <label for="toDate" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="toDate" name="toDate" 
+                       value="@(Model.ToDate?.ToString("yyyy-MM-dd"))">
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <div class="btn-group w-100" role="group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-body">
+        @if (Model.TotalItems > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">User</th>
+                            <th scope="col">Contact</th>
+                            <th scope="col" class="text-center">Role</th>
+                            <th scope="col" class="text-center">Status</th>
+                            <th scope="col" class="text-center d-none d-lg-table-cell">Activity</th>
+                            <th scope="col" class="text-end d-none d-md-table-cell">Orders</th>
+                            <th scope="col" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr class="@(user.IsNewUser ? "table-info" : "")">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-@user.RoleCssClass rounded-circle d-flex align-items-center justify-content-center me-3"
+                                             style="width: 40px; height: 40px;">
+                                            <i class="bi bi-person-fill text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">@user.FullName</h6>
+                                            <small class="text-muted">@@@@user.UserName</small>
+                                            @if (user.IsNewUser)
+                                            {
+                                                <span class="badge bg-info ms-1">New</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>@user.Email</strong>
+                                        @if (!string.IsNullOrEmpty(user.PhoneNumber))
+                                        {
+                                            <br>
+                                            <small class="text-muted">@user.PhoneNumber</small>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-@user.RoleCssClass">@user.RoleDisplayName</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-@user.StatusCssClass">@user.StatusDisplayName</span>
+                                </td>
+                                <td class="text-center d-none d-lg-table-cell">
+                                    <div>
+                                        <small class="text-muted">
+                                            @if (user.LastLoginDate.HasValue)
+                                            {
+                                                @if (user.IsRecentlyActive)
+                                                {
+                                                    <span class="text-success">
+                                                        <i class="bi bi-circle-fill"></i>
+                                                        @user.DaysSinceLastLogin days ago
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-warning">
+                                                        @user.DaysSinceLastLogin days ago
+                                                    </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Never logged in</span>
+                                            }
+                                        </small>
+                                        <br>
+                                        <small class="text-muted">@user.LoginCount logins</small>
+                                    </div>
+                                </td>
+                                <td class="text-end d-none d-md-table-cell">
+                                    <div>
+                                        <strong>@user.OrderCount</strong> orders
+                                        <br>
+                                        <small class="text-muted">@user.TotalSpent.ToString("C") spent</small>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@user.Id" 
+                                           class="btn btn-sm btn-outline-info" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@user.Id" 
+                                           class="btn btn-sm btn-outline-primary" title="Edit User">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@user.Id" 
+                                           class="btn btn-sm btn-outline-danger" title="Delete User">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <nav aria-label="Users pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <!-- Previous Page -->
+                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link" 
+                               asp-action="Index" 
+                               asp-route-page="@(Model.CurrentPage - 1)" 
+                               asp-route-pageSize="@Model.PageSize">
+                                <i class="bi bi-chevron-left"></i>
+                                Previous
+                            </a>
+                        </li>
+
+                        <!-- Page Numbers -->
+                        @{
+                            var startPage = Math.Max(1, Model.CurrentPage - 2);
+                            var endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+                        }
+
+                        @for (var i = startPage; i <= endPage; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-page="@i" 
+                                   asp-route-pageSize="@Model.PageSize">@i</a>
+                            </li>
+                        }
+
+                        <!-- Next Page -->
+                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                            <a class="page-link" 
+                               asp-action="Index" 
+                               asp-route-page="@(Model.CurrentPage + 1)" 
+                               asp-route-pageSize="@Model.PageSize">
+                                Next
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <!-- No Results -->
+            <div class="text-center py-5">
+                <i class="bi bi-people display-1 text-muted"></i>
+                <h4 class="mt-3">No users found</h4>
+                <p class="text-muted">
+                    No users have been registered yet.
+                    <br>
+                    <a asp-action="Create" class="btn btn-primary">Create first user</a>
+                </p>
+            </div>
+        }
+    </div>
+</div>

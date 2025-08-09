@@ -1,0 +1,444 @@
+@model PaymentCreateViewModel
+@{
+    ViewData["Title"] = "Create New Payment";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Payments</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Create Payment</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-plus-circle text-success"></i>
+            Create New Payment
+        </h2>
+        <p class="text-muted">Record a new payment transaction</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Back to Payments
+        </a>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Payment Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-credit-card text-primary"></i>
+                    Payment Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" id="paymentForm">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="row">
+                        <!-- Order Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="OrderId" class="form-label required">Order</label>
+                            <select asp-for="OrderId" class="form-select" asp-items="Model.OrderOptions" 
+                                    id="orderSelect" required>
+                                <option value="">Select an order...</option>
+                            </select>
+                            <span asp-validation-for="OrderId" class="text-danger"></span>
+                            <div id="orderInfo" class="mt-2" style="display: none;">
+                                <div class="card card-body bg-light p-2">
+                                    <small class="text-muted">
+                                        <strong>Order Details:</strong><br>
+                                        <span id="orderInfoText"></span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PaymentMethod" class="form-label required">Payment Method</label>
+                            <select asp-for="PaymentMethod" class="form-select" asp-items="Model.PaymentMethodOptions" required>
+                                <option value="">Select payment method...</option>
+                            </select>
+                            <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Amount -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Amount" class="form-label required">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Amount" class="form-control" type="number" step="0.01" min="0" 
+                                       placeholder="0.00" required id="amountInput">
+                                <span asp-validation-for="Amount" class="text-danger"></span>
+                            </div>
+                            <div class="form-text">
+                                <span id="suggestedAmount" style="display: none;">
+                                    Suggested amount based on order: $<span id="orderAmount"></span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Payment Status -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PaymentStatus" class="form-label">Payment Status</label>
+                            <select asp-for="PaymentStatus" class="form-select" asp-items="Model.PaymentStatusOptions">
+                            </select>
+                            <span asp-validation-for="PaymentStatus" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Transaction ID -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TransactionId" class="form-label">Transaction ID</label>
+                            <input asp-for="TransactionId" class="form-control" placeholder="External transaction reference">
+                            <span asp-validation-for="TransactionId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Payment Gateway -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PaymentGateway" class="form-label">Payment Gateway</label>
+                            <input asp-for="PaymentGateway" class="form-control" placeholder="e.g., Stripe, PayPal, Bank">
+                            <span asp-validation-for="PaymentGateway" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Date -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PaymentDate" class="form-label">Payment Date</label>
+                            <input asp-for="PaymentDate" class="form-control" type="datetime-local" 
+                                   value="@Model.PaymentDate.ToString("yyyy-MM-ddTHH:mm")">
+                            <span asp-validation-for="PaymentDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Details -->
+                    <div class="mb-3">
+                        <label asp-for="PaymentDetails" class="form-label">Payment Details</label>
+                        <textarea asp-for="PaymentDetails" class="form-control" rows="3" 
+                                  placeholder="Additional payment information, notes, or references..."></textarea>
+                        <span asp-validation-for="PaymentDetails" class="text-danger"></span>
+                        <div class="form-text">
+                            <span id="detailsCount">0</span>/500 characters
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                            Cancel
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-info me-2" id="validateBtn">
+                                <i class="bi bi-check-circle"></i>
+                                Validate
+                            </button>
+                            <button type="submit" class="btn btn-success" id="submitBtn">
+                                <i class="bi bi-save"></i>
+                                Create Payment
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Information Panel -->
+    <div class="col-lg-4">
+        <!-- Quick Tips -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-warning"></i>
+                    Quick Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="bi bi-check text-success"></i>
+                        Select an order to auto-fill amount
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check text-success"></i>
+                        Transaction ID links to payment gateway
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check text-success"></i>
+                        Use "Pending" for unprocessed payments
+                    </li>
+                    <li class="mb-0">
+                        <i class="bi bi-check text-success"></i>
+                        Payment details support additional notes
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Payment Methods Info -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-info-circle text-info"></i>
+                    Payment Methods
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <i class="bi bi-credit-card text-primary" style="font-size: 2rem;"></i>
+                            <div class="small">Credit Card</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <i class="bi bi-paypal text-info" style="font-size: 2rem;"></i>
+                            <div class="small">PayPal</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <i class="bi bi-bank text-success" style="font-size: 2rem;"></i>
+                            <div class="small">Bank Transfer</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-0">
+                            <i class="bi bi-cash text-warning" style="font-size: 2rem;"></i>
+                            <div class="small">Cash on Delivery</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            const orderSelect = $('#orderSelect');
+            const orderInfo = $('#orderInfo');
+            const orderInfoText = $('#orderInfoText');
+            const amountInput = $('#amountInput');
+            const suggestedAmount = $('#suggestedAmount');
+            const orderAmount = $('#orderAmount');
+            const detailsTextarea = $('textarea[name="PaymentDetails"]');
+            const detailsCount = $('#detailsCount');
+            const validateBtn = $('#validateBtn');
+
+            // Order selection handler
+            orderSelect.on('change', function() {
+                const orderId = $(this).val();
+                if (orderId) {
+                    // Get order details via AJAX
+                    $.get('@Url.Action("GetOrderDetails")', { orderId: orderId })
+                        .done(function(response) {
+                            if (response.success) {
+                                const order = response.data;
+                                orderInfoText.html(`
+                                    <strong>${order.orderNumber}</strong><br>
+                                    Customer: ${order.userName} (${order.userEmail})<br>
+                                    Total: $${order.totalAmount}<br>
+                                    Date: ${order.orderDate}
+                                    ${order.hasExistingPayment ? '<br><span class="text-warning">⚠️ Order already has payment</span>' : ''}
+                                `);
+                                orderInfo.show();
+                                
+                                // Suggest amount
+                                orderAmount.text(order.totalAmount);
+                                suggestedAmount.show();
+                                
+                                // Auto-fill amount if empty
+                                if (!amountInput.val()) {
+                                    amountInput.val(order.totalAmount);
+                                }
+                                
+                                if (order.hasExistingPayment) {
+                                    showWarning('This order already has a payment. Please verify before proceeding.');
+                                }
+                            } else {
+                                showError('Error loading order details: ' + response.message);
+                            }
+                        })
+                        .fail(function() {
+                            showError('Failed to load order details');
+                        });
+                } else {
+                    orderInfo.hide();
+                    suggestedAmount.hide();
+                }
+            });
+
+            // Suggested amount click handler
+            suggestedAmount.on('click', function() {
+                const suggested = orderAmount.text();
+                if (suggested) {
+                    amountInput.val(suggested);
+                }
+            });
+
+            // Character counter for payment details
+            detailsTextarea.on('input', function() {
+                const length = $(this).val().length;
+                detailsCount.text(length);
+                
+                if (length > 500) {
+                    detailsCount.addClass('text-danger');
+                } else if (length > 400) {
+                    detailsCount.addClass('text-warning').removeClass('text-danger');
+                } else {
+                    detailsCount.removeClass('text-danger text-warning');
+                }
+            });
+
+            // Validate button
+            validateBtn.on('click', function() {
+                validateForm();
+            });
+
+            // Form validation
+            function validateForm() {
+                let isValid = true;
+                let errors = [];
+
+                // Check required fields
+                if (!orderSelect.val()) {
+                    errors.push('Order is required');
+                    isValid = false;
+                }
+
+                if (!$('select[name="PaymentMethod"]').val()) {
+                    errors.push('Payment method is required');
+                    isValid = false;
+                }
+
+                if (!amountInput.val() || parseFloat(amountInput.val()) <= 0) {
+                    errors.push('Valid amount is required');
+                    isValid = false;
+                }
+
+                if (detailsTextarea.val().length > 500) {
+                    errors.push('Payment details cannot exceed 500 characters');
+                    isValid = false;
+                }
+
+                if (isValid) {
+                    showSuccess('Form validation passed');
+                } else {
+                    showError('Validation errors: ' + errors.join(', '));
+                }
+
+                return isValid;
+            }
+
+            // Form submit validation
+            $('#paymentForm').on('submit', function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Helper functions
+            function showSuccess(message) {
+                showAlert(message, 'success');
+            }
+
+            function showError(message) {
+                showAlert(message, 'danger');
+            }
+
+            function showWarning(message) {
+                showAlert(message, 'warning');
+            }
+
+            function showAlert(message, type) {
+                const alertHtml = `
+                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'x-circle'}-fill"></i>
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                // Remove existing alerts
+                $('.alert').remove();
+                
+                // Add new alert
+                $('.card-body').prepend(alertHtml);
+                
+                // Auto-dismiss after 5 seconds
+                setTimeout(function() {
+                    $('.alert').alert('close');
+                }, 5000);
+            }
+
+            // Initialize character counter
+            detailsTextarea.trigger('input');
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: #dc3545;
+        }
+        
+        .card-body.bg-light {
+            background-color: #f8f9fa !important;
+        }
+        
+        #suggestedAmount {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        #suggestedAmount:hover {
+            color: #0056b3;
+        }
+        
+        .form-text {
+            font-size: 0.875rem;
+        }
+        
+        .input-group .form-control:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .alert {
+            margin-bottom: 1rem;
+        }
+    </style>
+}
+

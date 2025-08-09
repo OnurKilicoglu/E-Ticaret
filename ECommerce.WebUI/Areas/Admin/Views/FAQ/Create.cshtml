@@ -1,0 +1,376 @@
+@model FAQCreateViewModel
+@{
+    ViewData["Title"] = "Create New FAQ";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">FAQs</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Create New FAQ</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-plus-circle text-success"></i>
+            Create New FAQ
+        </h2>
+        <p class="text-muted">Add a new frequently asked question to help your customers</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Back to FAQs
+        </a>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Create Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-question-circle text-primary"></i>
+                    FAQ Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Question -->
+                    <div class="mb-3">
+                        <label asp-for="Question" class="form-label required">Question</label>
+                        <textarea asp-for="Question" class="form-control" rows="3" maxlength="500" 
+                                  placeholder="Enter the frequently asked question..."></textarea>
+                        <span asp-validation-for="Question" class="text-danger"></span>
+                        <div class="form-text">
+                            <span id="questionCount">0</span>/500 characters
+                        </div>
+                    </div>
+
+                    <!-- Answer -->
+                    <div class="mb-3">
+                        <label asp-for="Answer" class="form-label required">Answer</label>
+                        <textarea asp-for="Answer" class="form-control" rows="6" 
+                                  placeholder="Provide a detailed answer to help users..."></textarea>
+                        <span asp-validation-for="Answer" class="text-danger"></span>
+                        <div class="form-text">You can use HTML formatting for better presentation</div>
+                    </div>
+
+                    <!-- Category and Order -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="CategoryId" class="form-label">Category</label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="Model.CategoryOptions">
+                                <option value="">Select Category (Optional)</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                            <div class="form-text">Organize your FAQ by category</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DisplayOrder" class="form-label">Display Order</label>
+                            <input asp-for="DisplayOrder" type="number" class="form-control" min="0" 
+                                   placeholder="Auto-generated if left empty">
+                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                            <div class="form-text">Lower numbers appear first</div>
+                        </div>
+                    </div>
+
+                    <!-- Tags and Author -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Tags" class="form-label">Tags</label>
+                            <input asp-for="Tags" class="form-control" id="tagsInput" 
+                                   placeholder="support, billing, account (comma-separated)">
+                            <span asp-validation-for="Tags" class="text-danger"></span>
+                            @if (Model.TagOptions.Any())
+                            {
+                                <div class="mt-2">
+                                    <small class="text-muted">Popular tags:</small>
+                                    @foreach (var tag in Model.TagOptions.Take(8))
+                                    {
+                                        <button type="button" class="btn btn-outline-secondary btn-sm me-1 mt-1 tag-suggestion" 
+                                                data-tag="@tag">@tag</button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Author" class="form-label">Author</label>
+                            <input asp-for="Author" class="form-control" list="authorSuggestions" 
+                                   placeholder="Enter author name">
+                            <datalist id="authorSuggestions">
+                                @foreach (var author in Model.AuthorOptions)
+                                {
+                                    <option value="@author.Value">@author.Text</option>
+                                }
+                            </datalist>
+                            <span asp-validation-for="Author" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
+                            <label asp-for="IsActive" class="form-check-label">
+                                Active (Visible to users)
+                            </label>
+                        </div>
+                        <div class="form-text">FAQ will be immediately visible to users when active</div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-lg"></i>
+                                Create FAQ
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Creation Tips -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-warning"></i>
+                    FAQ Creation Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        <strong>Clear Questions:</strong> Use simple, direct language
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        <strong>Comprehensive Answers:</strong> Provide complete solutions
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        <strong>Use Categories:</strong> Group related FAQs together
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        <strong>Add Tags:</strong> Help users find relevant content
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        <strong>Review Regularly:</strong> Keep information up-to-date
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- FAQ Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-bar-chart text-info"></i>
+                    Quick Stats
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h5 class="text-primary mb-0">@Model.DisplayOrder</h5>
+                            <small class="text-muted">Next Order</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="text-info mb-0">@Model.CategoryOptions.Count</h5>
+                        <small class="text-muted">Categories</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample FAQ -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-eye text-secondary"></i>
+                    Example FAQ
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="border rounded p-3 bg-light">
+                    <h6 class="text-primary">How do I reset my password?</h6>
+                    <p class="small mb-0">
+                        To reset your password, click on "Forgot Password" on the login page. 
+                        Enter your email address and we'll send you a reset link. 
+                        Follow the instructions in the email to create a new password.
+                    </p>
+                    <div class="mt-2">
+                        <span class="badge bg-secondary">account</span>
+                        <span class="badge bg-secondary">login</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Character count for question
+            $('#Question').on('input', function() {
+                const length = $(this).val().length;
+                $('#questionCount').text(length);
+                
+                if (length > 450) {
+                    $('#questionCount').addClass('text-warning');
+                } else if (length > 500) {
+                    $('#questionCount').addClass('text-danger').removeClass('text-warning');
+                } else {
+                    $('#questionCount').removeClass('text-warning text-danger');
+                }
+            });
+
+            // Tag suggestions
+            $('.tag-suggestion').on('click', function() {
+                const tag = $(this).data('tag');
+                const currentTags = $('#tagsInput').val();
+                
+                if (currentTags === '') {
+                    $('#tagsInput').val(tag);
+                } else if (!currentTags.split(',').map(t => t.trim()).includes(tag)) {
+                    $('#tagsInput').val(currentTags + ', ' + tag);
+                }
+            });
+
+            // Auto-format tags on blur
+            $('#tagsInput').on('blur', function() {
+                const tags = $(this).val();
+                if (tags) {
+                    const cleanTags = tags.split(',')
+                        .map(t => t.trim())
+                        .filter(t => t.length > 0)
+                        .join(', ');
+                    $(this).val(cleanTags);
+                }
+            });
+
+            // Form validation
+            $('form').on('submit', function(e) {
+                const question = $('#Question').val().trim();
+                const answer = $('#Answer').val().trim();
+
+                if (!question) {
+                    e.preventDefault();
+                    alert('Please enter a question.');
+                    $('#Question').focus();
+                    return false;
+                }
+
+                if (question.length > 500) {
+                    e.preventDefault();
+                    alert('Question cannot exceed 500 characters.');
+                    $('#Question').focus();
+                    return false;
+                }
+
+                if (!answer) {
+                    e.preventDefault();
+                    alert('Please provide an answer.');
+                    $('#Answer').focus();
+                    return false;
+                }
+
+                // Show loading state
+                $(this).find('button[type="submit"]').prop('disabled', true).html(
+                    '<i class="bi bi-hourglass-split"></i> Creating FAQ...'
+                );
+            });
+
+            // Auto-suggest question format
+            $('#Question').on('focus', function() {
+                if ($(this).val() === '') {
+                    $(this).attr('placeholder', 'e.g., How do I...? What is...? Where can I find...?');
+                }
+            }).on('blur', function() {
+                $(this).attr('placeholder', 'Enter the frequently asked question...');
+            });
+
+            // Initialize character count
+            $('#Question').trigger('input');
+
+            // Auto-focus on question field
+            $('#Question').focus();
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .tag-suggestion {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tag-suggestion:hover {
+            background-color: var(--bs-secondary);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .form-text {
+            font-size: 0.875rem;
+        }
+
+        .card-header {
+            background-color: rgba(13, 110, 253, 0.05);
+            border-bottom: 1px solid rgba(13, 110, 253, 0.125);
+        }
+
+        .border-end {
+            border-right: 1px solid #dee2e6 !important;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+    </style>
+}
+

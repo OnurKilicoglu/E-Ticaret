@@ -1,0 +1,382 @@
+@model SliderEditViewModel
+@{
+    ViewData["Title"] = "Edit Slider";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Sliders</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Edit</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-pencil-square text-primary"></i>
+            Edit Slider: @Model.Title
+        </h2>
+        <p class="text-muted">Update banner slide information and settings</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                <i class="bi bi-eye"></i>
+                View Details
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Sliders
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Edit Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-image text-primary"></i>
+                    Slider Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data" novalidate>
+                    <input asp-for="Id" type="hidden" />
+                    <input asp-for="ImagePath" type="hidden" />
+                    <input asp-for="CreatedDate" type="hidden" />
+                    
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Current Image Display -->
+                    @if (!string.IsNullOrEmpty(Model.ImagePath))
+                    {
+                        <h6 class="fw-bold mb-3">Current Image</h6>
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <img src="@Model.ImagePath" alt="@Model.Title" 
+                                             class="img-fluid current-image" style="max-height: 200px;">
+                                        <p class="text-muted mt-2 mb-0">Current slider image</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- New Image Upload Section -->
+                    <h6 class="fw-bold mb-3">
+                        @(string.IsNullOrEmpty(Model.ImagePath) ? "Upload Image" : "Change Image (Optional)")
+                    </h6>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label asp-for="ImageFile" class="form-label">
+                                @(string.IsNullOrEmpty(Model.ImagePath) ? "Slider Image" : "New Slider Image")
+                            </label>
+                            <input asp-for="ImageFile" type="file" class="form-control" 
+                                   accept="image/*" id="imageFile">
+                            <span asp-validation-for="ImageFile" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i>
+                                @(string.IsNullOrEmpty(Model.ImagePath) 
+                                    ? "Please select an image file." 
+                                    : "Leave empty to keep current image.")
+                                Supported formats: JPG, PNG, GIF, WebP. Maximum size: 2MB.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- New Image Preview -->
+                    <div class="row mb-4" id="imagePreviewContainer" style="display: none;">
+                        <div class="col-md-12">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">New Image Preview</h6>
+                                </div>
+                                <div class="card-body text-center">
+                                    <img id="imagePreview" src="" alt="New Image Preview" 
+                                         class="img-fluid" style="max-height: 200px;">
+                                    <p class="text-muted mt-2 mb-0">This will replace the current image</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <h6 class="fw-bold mb-3">Basic Information</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label asp-for="Title" class="form-label required">Title</label>
+                            <input asp-for="Title" class="form-control" placeholder="Enter slider title">
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                            <div class="form-text">Main heading text that will appear on the slider</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="DisplayOrder" class="form-label required">Display Order</label>
+                            <input asp-for="DisplayOrder" type="number" class="form-control" 
+                                   min="1" max="999" placeholder="1">
+                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                            <div class="form-text">Lower numbers appear first</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" 
+                                      placeholder="Enter slider description or subtitle (optional)"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                            <div class="form-text">Optional subtitle or description text</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label asp-for="LinkUrl" class="form-label">Link URL</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-link-45deg"></i>
+                                </span>
+                                <input asp-for="LinkUrl" type="url" class="form-control" 
+                                       placeholder="https://example.com (optional)">
+                            </div>
+                            <span asp-validation-for="LinkUrl" class="text-danger"></span>
+                            <div class="form-text">URL to redirect when slider is clicked (optional)</div>
+                        </div>
+                    </div>
+
+                    <!-- Status Settings -->
+                    <h6 class="fw-bold mb-3">Status Settings</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Active Slider
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                Only active sliders will be displayed on the website
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i>
+                                Update Slider
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Slider Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-info-circle text-info"></i>
+                    Slider Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <dl class="row small">
+                    <dt class="col-6">Slider ID:</dt>
+                    <dd class="col-6">@Model.Id</dd>
+                    
+                    <dt class="col-6">Created:</dt>
+                    <dd class="col-6">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+                    
+                    <dt class="col-6">Current Order:</dt>
+                    <dd class="col-6">#@Model.DisplayOrder</dd>
+                    
+                    <dt class="col-6">Status:</dt>
+                    <dd class="col-6">
+                        <span class="badge bg-@(Model.IsActive ? "success" : "secondary")">
+                            @(Model.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightning text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-@(Model.IsActive ? "warning" : "success") btn-sm toggle-status" 
+                            data-slider-id="@Model.Id">
+                        <i class="bi bi-@(Model.IsActive ? "pause" : "play")-fill"></i>
+                        @(Model.IsActive ? "Deactivate" : "Activate") Slider
+                    </button>
+                    
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-eye"></i>
+                        View Details
+                    </a>
+                    
+                    <hr>
+                    
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                        Delete Slider
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guidelines -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-warning"></i>
+                    Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6 class="small fw-bold">Image Guidelines:</h6>
+                <ul class="small mb-3">
+                    <li>Recommended: 1920x600px</li>
+                    <li>Maximum size: 2MB</li>
+                    <li>Formats: JPG, PNG, GIF, WebP</li>
+                </ul>
+
+                <h6 class="small fw-bold">Best Practices:</h6>
+                <ul class="small mb-0">
+                    <li>Keep titles concise and impactful</li>
+                    <li>Test on mobile devices</li>
+                    <li>Use high-quality images</li>
+                    <li>Consider loading performance</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Image preview functionality
+            $('#imageFile').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    // Validate file size
+                    if (file.size > 2 * 1024 * 1024) { // 2MB
+                        alert('File size must be less than 2MB');
+                        $(this).val('');
+                        $('#imagePreviewContainer').hide();
+                        return;
+                    }
+
+                    // Validate file type
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                    if (!allowedTypes.includes(file.type)) {
+                        alert('Please select a valid image file (JPG, PNG, GIF, or WebP)');
+                        $(this).val('');
+                        $('#imagePreviewContainer').hide();
+                        return;
+                    }
+
+                    // Show preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#imagePreview').attr('src', e.target.result);
+                        $('#imagePreviewContainer').show();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#imagePreviewContainer').hide();
+                }
+            });
+
+            // Status toggle functionality
+            $('.toggle-status').on('click', function() {
+                const sliderId = $(this).data('slider-id');
+                
+                $.post('@Url.Action("ToggleStatus")', { id: sliderId })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error updating slider status');
+                    });
+            });
+
+            // Form validation
+            $('form').on('submit', function(e) {
+                const title = $('#Title').val().trim();
+
+                if (!title) {
+                    e.preventDefault();
+                    alert('Please enter a title for the slider.');
+                    $('#Title').focus();
+                    return false;
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .current-image {
+            border: 2px solid #dee2e6;
+            border-radius: 0.375rem;
+        }
+        
+        #imagePreviewContainer {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+}

@@ -1,0 +1,545 @@
+@model ECommerce.WebUI.Models.CatalogViewModel
+
+@{
+    ViewData["Title"] = ViewData["Title"] ?? "Products";
+    ViewData["MetaDescription"] = ViewData["MetaDescription"] ?? "Browse our complete catalog of products.";
+}
+
+<!-- Page Header -->
+<div class="bg-light py-4 mb-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-0">@ViewData["Title"]</h1>
+                @if (Model.CurrentCategory != null)
+                {
+                    <nav aria-label="breadcrumb" class="mt-2">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item">
+                                <a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a asp-controller="Catalog" asp-action="Index" class="text-decoration-none">All Products</a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">@Model.CurrentCategory.Name</li>
+                        </ol>
+                    </nav>
+                    @if (!string.IsNullOrEmpty(Model.CurrentCategory.Description))
+                    {
+                        <p class="text-muted mt-2 mb-0">@Model.CurrentCategory.Description</p>
+                    }
+                }
+            </div>
+            <div class="col-md-4 text-md-end">
+                @if (Model.Products.TotalItems > 0)
+                {
+                    <small class="text-muted">
+                        Showing @Model.Products.StartItem-@Model.Products.EndItem of @Model.Products.TotalItems products
+                    </small>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Categories Sidebar -->
+        <div class="col-lg-3 col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-grid-3x3-gap me-2"></i>Categories
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Categories.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            <!-- All Products Link -->
+                            <a asp-controller="Catalog" asp-action="Index" 
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center @(Model.CurrentCategory == null ? "active" : "")">
+                                <span>
+                                    <i class="bi bi-collection me-2"></i>All Products
+                                </span>
+                                <span class="badge bg-secondary rounded-pill">@Model.Products.TotalItems</span>
+                            </a>
+                            
+                            <!-- Category Links -->
+                            @foreach (var category in Model.Categories)
+                            {
+                                <a asp-controller="Catalog" asp-action="Category" asp-route-slug="@category.Slug"
+                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center @(Model.CurrentCategory?.Id == category.Id ? "active" : "")">
+                                    <span>
+                                        <i class="bi bi-tag me-2"></i>@category.Name
+                                    </span>
+                                    @if (category.ProductCount > 0)
+                                    {
+                                        <span class="badge bg-secondary rounded-pill">@category.ProductCount</span>
+                                    }
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-3 text-center text-muted">
+                            <i class="bi bi-folder-x display-6 d-block mb-2"></i>
+                            <p class="mb-0">No categories available</p>
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            <!-- Filters Card (Optional) -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-funnel me-2"></i>Filters
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <!-- Search -->
+                        <div class="mb-3">
+                            <label for="searchTerm" class="form-label">Search Products</label>
+                            <input type="text" class="form-control" id="searchTerm" name="searchTerm" 
+                                   value="@Model.Filters.SearchTerm" placeholder="Enter product name...">
+                        </div>
+                        
+                        <!-- Sort By -->
+                        <div class="mb-3">
+                            <label for="sortBy" class="form-label">Sort By</label>
+                            <select class="form-select" id="sortBy" name="sortBy" onchange="document.getElementById('filterForm').submit();">
+                                <option value="name" selected="@(Model.Filters.SortBy == "name")">Name (A-Z)</option>
+                                <option value="price" selected="@(Model.Filters.SortBy == "price")">Price (Low-High)</option>
+                                <option value="created" selected="@(Model.Filters.SortBy == "created")">Newest First</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Hidden Fields -->
+                        <input type="hidden" name="categoryId" value="@Model.Filters.CategoryId">
+                        <input type="hidden" name="page" value="1">
+                        
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-search me-1"></i>Apply Filters
+                        </button>
+                        
+                        @if (Model.Filters.HasFilters)
+                        {
+                            <a asp-controller="Catalog" asp-action="Index" class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                                <i class="bi bi-x-circle me-1"></i>Clear Filters
+                            </a>
+                        }
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Products Section -->
+        <div class="col-lg-9 col-md-8">
+            @if (Model.Products.Products.Any())
+            {
+                <!-- Products Grid -->
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-2 row-cols-xl-3 g-4 mb-4">
+                    @foreach (var product in Model.Products.Products)
+                    {
+                        <div class="col">
+                            <div class="card product-card h-100 shadow-sm">
+                                <!-- Product Image -->
+                                <div class="position-relative overflow-hidden">
+                                    <img src="@(product.ImageUrl ?? "/images/product-placeholder.jpg")" 
+                                         alt="@product.Name" 
+                                         class="card-img-top product-image" 
+                                         style="height: 200px; object-fit: cover;"
+                                         onerror="this.src='/images/product-placeholder.jpg'">
+                                    
+                                    <!-- Product Badges -->
+                                    @if (product.HasDiscount)
+                                    {
+                                        <span class="position-absolute top-0 start-0 m-2 badge bg-danger">
+                                            -@product.DiscountPercentage%
+                                        </span>
+                                    }
+                                    else if (product.IsFeatured)
+                                    {
+                                        <span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark">
+                                            Featured
+                                        </span>
+                                    }
+                                    else if (product.IsNew)
+                                    {
+                                        <span class="position-absolute top-0 start-0 m-2 badge bg-success">
+                                            New
+                                        </span>
+                                    }
+                                    
+                                    <!-- Quick Actions -->
+                                    <div class="position-absolute top-0 end-0 m-2 d-flex flex-column gap-1 product-actions">
+                                        <button type="button" class="btn btn-light btn-sm rounded-circle add-to-wishlist-btn" 
+                                                title="Add to Wishlist" 
+                                                data-product-id="@product.Id" 
+                                                data-product-name="@product.Name">
+                                            <i class="bi bi-heart"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-light btn-sm rounded-circle" title="Quick View">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Product Info -->
+                                <div class="card-body d-flex flex-column">
+                                    <!-- Category -->
+                                    <div class="mb-1">
+                                        <small class="text-muted">@product.CategoryName</small>
+                                    </div>
+                                    
+                                    <!-- Product Name -->
+                                    <h6 class="card-title">
+                                        <a href="/product/@product.Slug" class="text-decoration-none text-dark stretched-link">
+                                            @product.Name
+                                        </a>
+                                    </h6>
+                                    
+                                    <!-- Product Description -->
+                                    @if (!string.IsNullOrEmpty(product.ShortDescription))
+                                    {
+                                        <p class="card-text text-muted small flex-grow-1">
+                                            @product.ShortDescription
+                                        </p>
+                                    }
+                                    
+                                    <!-- Price -->
+                                    <div class="mb-3">
+                                        @if (product.HasDiscount)
+                                        {
+                                            <div class="d-flex align-items-center">
+                                                <span class="h6 text-danger mb-0 me-2">@product.FormattedDiscountPrice</span>
+                                                <small class="text-muted text-decoration-line-through">@product.FormattedPrice</small>
+                                            </div>
+                                            <small class="text-success">
+                                                Save @((product.Price - product.DiscountPrice!.Value).ToString("C"))
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <span class="h6 text-primary mb-0">@product.FormattedPrice</span>
+                                        }
+                                    </div>
+                                    
+                                    <!-- Stock Status -->
+                                    <div class="mb-3">
+                                        @if (product.InStock)
+                                        {
+                                            @if (product.StockQuantity <= 5)
+                                            {
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>Only @product.StockQuantity left
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i>In Stock
+                                                </span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle me-1"></i>Out of Stock
+                                            </span>
+                                        }
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="mt-auto">
+                                        @if (product.InStock)
+                                        {
+                                            <div class="d-grid gap-2">
+                                                <button type="button" class="btn btn-primary btn-sm btn-add-to-cart position-relative"
+                                                        data-product-id="@product.Id" 
+                                                        data-product-name="@product.Name"
+                                                        style="z-index: 10;">
+                                                    <i class="bi bi-cart-plus me-1"></i>Add to Cart
+                                                </button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
+                                                <i class="bi bi-x-circle me-1"></i>Out of Stock
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <!-- Pagination -->
+                @if (Model.Products.TotalPages > 1)
+                {
+                    <nav aria-label="Product pagination">
+                        <ul class="pagination justify-content-center">
+                            <!-- Previous Page -->
+                            @if (Model.Products.HasPreviousPage)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@GetPageUrl(Model.Products.CurrentPage - 1)" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">&laquo;</span>
+                                </li>
+                            }
+                            
+                            <!-- Page Numbers -->
+                            @{
+                                int startPage = Math.Max(1, Model.Products.CurrentPage - 2);
+                                int endPage = Math.Min(Model.Products.TotalPages, Model.Products.CurrentPage + 2);
+                            }
+                            
+                            @if (startPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@GetPageUrl(1)">1</a>
+                                </li>
+                                @if (startPage > 2)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                            }
+                            
+                            @for (int i = startPage; i <= endPage; i++)
+                            {
+                                <li class="page-item @(i == Model.Products.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@GetPageUrl(i)">@i</a>
+                                </li>
+                            }
+                            
+                            @if (endPage < Model.Products.TotalPages)
+                            {
+                                @if (endPage < Model.Products.TotalPages - 1)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                                <li class="page-item">
+                                    <a class="page-link" href="@GetPageUrl(Model.Products.TotalPages)">@Model.Products.TotalPages</a>
+                                </li>
+                            }
+                            
+                            <!-- Next Page -->
+                            @if (Model.Products.HasNextPage)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@GetPageUrl(Model.Products.CurrentPage + 1)" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">&raquo;</span>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <!-- No Products Found -->
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-search display-1 text-muted"></i>
+                    </div>
+                    <h3 class="text-muted mb-3">
+                        @if (Model.CurrentCategory != null)
+                        {
+                            <span>No products found in "@Model.CurrentCategory.Name"</span>
+                        }
+                        else if (!string.IsNullOrEmpty(Model.Filters.SearchTerm))
+                        {
+                            <span>No products found for "@Model.Filters.SearchTerm"</span>
+                        }
+                        else
+                        {
+                            <span>No products found</span>
+                        }
+                    </h3>
+                    <p class="text-muted mb-4">
+                        Try adjusting your search criteria or browse our categories to find what you're looking for.
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center">
+                        <a asp-controller="Catalog" asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-grid-3x3-gap me-2"></i>Browse All Products
+                        </a>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-house me-2"></i>Go Home
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetPageUrl(int page)
+    {
+        var routeValues = new Dictionary<string, object?>
+        {
+            { "page", page },
+            { "searchTerm", Model.Filters.SearchTerm },
+            { "categoryId", Model.Filters.CategoryId },
+            { "sortBy", Model.Filters.SortBy },
+            { "sortOrder", Model.Filters.SortOrder }
+        };
+
+        if (Model.CurrentCategory != null)
+        {
+            return Url.Action("Category", "Catalog", new { slug = Model.CurrentCategory.Slug, page }) ?? "";
+        }
+        else
+        {
+            return Url.Action("Index", "Catalog", routeValues) ?? "";
+        }
+    }
+}
+
+@section Styles {
+    <style>
+        .product-card {
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .product-actions {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .product-card:hover .product-actions {
+            opacity: 1;
+        }
+        
+        .product-image {
+            transition: transform 0.3s ease;
+        }
+        
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+        
+        .list-group-item.active {
+            background-color: var(--bs-primary);
+            border-color: var(--bs-primary);
+        }
+        
+        .btn-add-to-cart:hover {
+            transform: translateY(-1px);
+        }
+        
+        .card-title a:hover {
+            color: var(--bs-primary) !important;
+        }
+        
+        .stretched-link::after {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+            content: "";
+        }
+        
+        .btn-add-to-cart {
+            position: relative;
+            z-index: 10;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add to cart functionality
+            $('.btn-add-to-cart').on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const productId = $(this).data('product-id');
+                const productName = $(this).data('product-name');
+                const $btn = $(this);
+                const originalText = $btn.html();
+                
+                // Show loading state
+                $btn.prop('disabled', true).html('<i class="spinner-border spinner-border-sm me-1"></i>Adding...');
+                
+                // Add to cart
+                addToCart(productId, 1).then(function(response) {
+                    if (response.success) {
+                        $btn.removeClass('btn-primary').addClass('btn-success')
+                            .html('<i class="bi bi-check-circle me-1"></i>Added!');
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(function() {
+                            $btn.removeClass('btn-success').addClass('btn-primary')
+                                .html(originalText).prop('disabled', false);
+                        }, 2000);
+                        
+                        // Update cart count
+                        updateCartCount(response.cartCount);
+                        
+                        // Show success message
+                        if (typeof showToast === 'function') {
+                            showToast(`${productName} added to cart!`, 'success');
+                        }
+                    } else {
+                        $btn.removeClass('btn-primary').addClass('btn-danger')
+                            .html('<i class="bi bi-exclamation-circle me-1"></i>Error');
+                        
+                        setTimeout(function() {
+                            $btn.removeClass('btn-danger').addClass('btn-primary')
+                                .html(originalText).prop('disabled', false);
+                        }, 2000);
+                        
+                        if (typeof showToast === 'function') {
+                            showToast(response.message || 'Error adding to cart', 'error');
+                        }
+                    }
+                }).catch(function() {
+                    $btn.removeClass('btn-primary').addClass('btn-danger')
+                        .html('<i class="bi bi-exclamation-circle me-1"></i>Error');
+                    
+                    setTimeout(function() {
+                        $btn.removeClass('btn-danger').addClass('btn-primary')
+                            .html(originalText).prop('disabled', false);
+                    }, 2000);
+                    
+                    if (typeof showToast === 'function') {
+                        showToast('Network error. Please try again.', 'error');
+                    }
+                });
+            });
+        });
+    </script>
+}

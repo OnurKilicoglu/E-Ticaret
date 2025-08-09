@@ -1,0 +1,462 @@
+@model ContactMessageDetailViewModel
+@{
+    ViewData["Title"] = "Contact Message Details";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Contact Messages</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Message Details</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi @Model.ReadStatusIcon text-@Model.ReadStatusCssClass"></i>
+            Contact Message Details
+        </h2>
+        <p class="text-muted">
+            From <strong>@Model.Name</strong> • @Model.CreatedDate.ToString("MMMM dd, yyyy 'at' HH:mm")
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-@(Model.IsRead ? "warning" : "success") toggle-read-status" 
+                    data-message-id="@Model.Id">
+                <i class="bi @(Model.IsRead ? "bi-envelope" : "bi-envelope-open")"></i>
+                @(Model.IsRead ? "Mark Unread" : "Mark Read")
+            </button>
+            <a href="@Model.MailtoLink" class="btn btn-outline-primary">
+                <i class="bi bi-reply"></i>
+                Reply via Email
+            </a>
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i>
+                Delete
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Message Content -->
+    <div class="col-lg-8">
+        <!-- Message Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-envelope-fill text-primary"></i>
+                        @Model.Subject
+                    </h5>
+                    <div>
+                        <span class="badge bg-@Model.ReadStatusCssClass">
+                            <i class="bi @Model.ReadStatusIcon"></i>
+                            @Model.ReadStatusDisplayName
+                        </span>
+                        @if (Model.IsReplied)
+                        {
+                            <span class="badge bg-@Model.ReplyStatusCssClass ms-1">
+                                <i class="bi @Model.ReplyStatusIcon"></i>
+                                @Model.ReplyStatusDisplayName
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Sender Information -->
+                <div class="border rounded p-3 bg-light mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-2">
+                                <i class="bi bi-person-fill"></i>
+                                Contact Information
+                            </h6>
+                            <dl class="row mb-0">
+                                <dt class="col-4">Name:</dt>
+                                <dd class="col-8">@Model.Name</dd>
+                                
+                                <dt class="col-4">Email:</dt>
+                                <dd class="col-8">
+                                    <a href="mailto:@Model.Email" class="text-decoration-none">
+                                        @Model.Email
+                                    </a>
+                                </dd>
+                                
+                                @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                                {
+                                    <dt class="col-4">Phone:</dt>
+                                    <dd class="col-8">
+                                        <a href="tel:@Model.PhoneNumber" class="text-decoration-none">
+                                            @Model.PhoneNumber
+                                        </a>
+                                    </dd>
+                                }
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-info mb-2">
+                                <i class="bi bi-clock-fill"></i>
+                                Message Timeline
+                            </h6>
+                            <dl class="row mb-0">
+                                <dt class="col-5">Received:</dt>
+                                <dd class="col-7">@Model.CreatedDate.ToString("MMM dd, yyyy HH:mm")</dd>
+                                
+                                @if (Model.UpdatedDate.HasValue)
+                                {
+                                    <dt class="col-5">Last Updated:</dt>
+                                    <dd class="col-7">@Model.UpdatedDate.Value.ToString("MMM dd, yyyy HH:mm")</dd>
+                                }
+                                
+                                @if (Model.IsReplied && Model.RepliedDate.HasValue)
+                                {
+                                    <dt class="col-5">Replied:</dt>
+                                    <dd class="col-7">@Model.RepliedDate.Value.ToString("MMM dd, yyyy HH:mm")</dd>
+                                }
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Content -->
+                <div class="mb-4">
+                    <h6 class="text-secondary mb-3">
+                        <i class="bi bi-chat-text-fill"></i>
+                        Message Content
+                    </h6>
+                    <div class="border rounded p-4 bg-white">
+                        <div class="message-content">
+                            @Html.Raw(Model.FormattedMessage)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Reply Section -->
+                @if (Model.IsReplied && !string.IsNullOrEmpty(Model.AdminReply))
+                {
+                    <div class="mb-4">
+                        <h6 class="text-success mb-3">
+                            <i class="bi bi-reply-fill"></i>
+                            Admin Reply
+                            <small class="text-muted">(@Model.RepliedDate?.ToString("MMM dd, yyyy HH:mm"))</small>
+                        </h6>
+                        <div class="border rounded p-4 bg-success bg-opacity-10 border-success">
+                            <div class="admin-reply-content">
+                                @Html.Raw(Model.FormattedAdminReply)
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Quick Reply Form -->
+                <div class="mt-4">
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-reply-fill"></i>
+                        Quick Reply
+                    </h6>
+                    <form id="replyForm">
+                        <div class="mb-3">
+                            <textarea id="replyMessage" class="form-control" rows="4" 
+                                      placeholder="Type your reply here..." 
+                                      maxlength="1000"></textarea>
+                            <div class="form-text">
+                                <span id="replyCharCount">0</span>/1000 characters
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted align-self-center">
+                                Reply will be saved to the system. Use "Reply via Email" button to send directly.
+                            </small>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-lg"></i>
+                                Save Reply
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightning text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-@(Model.IsRead ? "warning" : "success") toggle-read-status" 
+                            data-message-id="@Model.Id">
+                        <i class="bi @(Model.IsRead ? "bi-envelope" : "bi-envelope-open")"></i>
+                        @(Model.IsRead ? "Mark as Unread" : "Mark as Read")
+                    </button>
+                    
+                    <a href="@Model.MailtoLink" class="btn btn-outline-primary">
+                        <i class="bi bi-envelope"></i>
+                        Send Email Reply
+                    </a>
+                    
+                    <button type="button" class="btn btn-outline-info" onclick="copyToClipboard('@Model.Email')">
+                        <i class="bi bi-clipboard"></i>
+                        Copy Email Address
+                    </button>
+                    
+                    @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                    {
+                        <button type="button" class="btn btn-outline-info" onclick="copyToClipboard('@Model.PhoneNumber')">
+                            <i class="bi bi-telephone"></i>
+                            Copy Phone Number
+                        </button>
+                    }
+                    
+                    <hr>
+                    
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                        Delete Message
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-bar-chart text-info"></i>
+                    Message Information
+                </h6>
+            </div>
+            <div class="card-body">
+                <dl class="row small">
+                    <dt class="col-6">Message ID:</dt>
+                    <dd class="col-6">#@Model.Id</dd>
+                    
+                    <dt class="col-6">Status:</dt>
+                    <dd class="col-6">
+                        <span class="badge bg-@Model.ReadStatusCssClass">
+                            @Model.ReadStatusDisplayName
+                        </span>
+                    </dd>
+                    
+                    <dt class="col-6">Reply Status:</dt>
+                    <dd class="col-6">
+                        <span class="badge bg-@Model.ReplyStatusCssClass">
+                            @Model.ReplyStatusDisplayName
+                        </span>
+                    </dd>
+                    
+                    <dt class="col-6">Received:</dt>
+                    <dd class="col-6">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+                    
+                    <dt class="col-6">Time:</dt>
+                    <dd class="col-6">@Model.CreatedDate.ToString("HH:mm")</dd>
+                    
+                    @if (Model.UpdatedDate.HasValue)
+                    {
+                        <dt class="col-6">Last Updated:</dt>
+                        <dd class="col-6">@Model.UpdatedDate.Value.ToString("MMM dd, yyyy")</dd>
+                    }
+                    
+                    <dt class="col-6">Characters:</dt>
+                    <dd class="col-6">@Model.Message.Length</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Related Messages -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-collection text-secondary"></i>
+                    From Same Sender
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">
+                    <i class="bi bi-info-circle"></i>
+                    Other messages from this email address would appear here.
+                </p>
+                <a asp-action="Index" asp-route-email="@Model.Email" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-search"></i>
+                    View All from @Model.Email
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Character count for reply
+            $('#replyMessage').on('input', function() {
+                const length = $(this).val().length;
+                $('#replyCharCount').text(length);
+                
+                if (length > 900) {
+                    $('#replyCharCount').addClass('text-warning');
+                } else if (length >= 1000) {
+                    $('#replyCharCount').addClass('text-danger').removeClass('text-warning');
+                } else {
+                    $('#replyCharCount').removeClass('text-warning text-danger');
+                }
+            });
+
+            // Toggle read status
+            $('.toggle-read-status').on('click', function() {
+                const messageId = $(this).data('message-id');
+                
+                $.post('@Url.Action("ToggleReadStatus")', { id: messageId })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error updating message status');
+                    });
+            });
+
+            // Handle reply form submission
+            $('#replyForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const reply = $('#replyMessage').val().trim();
+                if (!reply) {
+                    alert('Please enter a reply message.');
+                    return;
+                }
+
+                const submitBtn = $(this).find('button[type="submit"]');
+                const originalText = submitBtn.html();
+                
+                submitBtn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Saving...');
+
+                $.post('@Url.Action("Reply")', { 
+                    id: @Model.Id, 
+                    reply: reply,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                })
+                .fail(function() {
+                    alert('Error saving reply');
+                })
+                .always(function() {
+                    submitBtn.prop('disabled', false).html(originalText);
+                });
+            });
+
+            // Initialize character count
+            $('#replyMessage').trigger('input');
+        });
+
+        // Copy to clipboard function
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Show success message
+                const toast = $(`
+                    <div class="toast position-fixed top-0 end-0 m-3" style="z-index: 9999;">
+                        <div class="toast-header">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <strong class="me-auto">Copied!</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${text} has been copied to clipboard.
+                        </div>
+                    </div>
+                `);
+                
+                $('body').append(toast);
+                toast.toast('show');
+                
+                toast.on('hidden.bs.toast', function() {
+                    toast.remove();
+                });
+            }).catch(function() {
+                alert('Failed to copy to clipboard');
+            });
+        }
+    </script>
+
+    <style>
+        .message-content, .admin-reply-content {
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .card-header {
+            background-color: rgba(13, 110, 253, 0.05);
+            border-bottom: 1px solid rgba(13, 110, 253, 0.125);
+        }
+        
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+        
+        .border-success {
+            border-color: #198754 !important;
+        }
+        
+        .bg-success.bg-opacity-10 {
+            background-color: rgba(25, 135, 84, 0.1) !important;
+        }
+        
+        .toast {
+            min-width: 250px;
+        }
+        
+        dl.row dt {
+            font-weight: 500;
+        }
+        
+        .btn-group-sm .btn {
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+}
+

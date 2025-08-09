@@ -1,0 +1,157 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Create Your Account";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white text-center">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-person-plus me-2"></i>Create Your Account
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Register" method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        @if (ViewData.ModelState.ErrorCount > 0)
+                        {
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="FirstName" class="form-label">
+                                    <i class="bi bi-person me-1"></i>First Name
+                                </label>
+                                <input asp-for="FirstName" class="form-control" placeholder="Enter your first name" autofocus />
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="LastName" class="form-label">
+                                    <i class="bi bi-person me-1"></i>Last Name
+                                </label>
+                                <input asp-for="LastName" class="form-control" placeholder="Enter your last name" />
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-6">
+                                <label asp-for="UserName" class="form-label">
+                                    <i class="bi bi-at me-1"></i>Username
+                                </label>
+                                <input asp-for="UserName" class="form-control" placeholder="Choose a username" />
+                                <span asp-validation-for="UserName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label">
+                                    <i class="bi bi-telephone me-1"></i>Phone Number
+                                </label>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="(555) 123-4567" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label asp-for="Email" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>Email Address
+                            </label>
+                            <input asp-for="Email" class="form-control" placeholder="Enter your email address" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-6">
+                                <label asp-for="Password" class="form-label">
+                                    <i class="bi bi-lock me-1"></i>Password
+                                </label>
+                                <input asp-for="Password" class="form-control" placeholder="Create a password" />
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                                <div class="form-text">
+                                    <small>Password must be at least 6 characters long</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ConfirmPassword" class="form-label">
+                                    <i class="bi bi-lock-fill me-1"></i>Confirm Password
+                                </label>
+                                <input asp-for="ConfirmPassword" class="form-control" placeholder="Confirm your password" />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="form-check">
+                                <input asp-for="AcceptTerms" class="form-check-input" />
+                                <label asp-for="AcceptTerms" class="form-check-label">
+                                    I agree to the <a href="/terms" target="_blank" class="text-decoration-none">Terms and Conditions</a> 
+                                    and <a href="/privacy" target="_blank" class="text-decoration-none">Privacy Policy</a>
+                                </label>
+                                <span asp-validation-for="AcceptTerms" class="text-danger d-block"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-person-plus me-2"></i>Create Account
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center bg-light">
+                    <p class="mb-0">
+                        Already have an account? 
+                        <a asp-action="Login" class="text-decoration-none">
+                            Login here
+                        </a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Account Benefits -->
+            <div class="mt-4">
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <h5 class="text-center mb-3">Join Our Community</h5>
+                        <div class="row text-center">
+                            <div class="col-md-3 col-6 mb-3">
+                                <i class="bi bi-truck display-6 text-primary mb-2"></i>
+                                <h6>Free Shipping</h6>
+                                <small class="text-muted">On orders over $99</small>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <i class="bi bi-award display-6 text-warning mb-2"></i>
+                                <h6>Rewards Points</h6>
+                                <small class="text-muted">Earn with every purchase</small>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <i class="bi bi-bell display-6 text-info mb-2"></i>
+                                <h6>Exclusive Offers</h6>
+                                <small class="text-muted">Members-only deals</small>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <i class="bi bi-headset display-6 text-success mb-2"></i>
+                                <h6>Priority Support</h6>
+                                <small class="text-muted">Get help faster</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

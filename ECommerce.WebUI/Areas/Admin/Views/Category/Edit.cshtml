@@ -1,0 +1,347 @@
+@model CategoryViewModel
+@{
+    ViewData["Title"] = "Edit Category";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Categories</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Edit @Model.Name</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-pencil text-primary"></i>
+            Edit Category
+        </h2>
+        <p class="text-muted">Update category information and settings</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Back to Categories
+        </a>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Edit Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle text-primary"></i>
+                    Category Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" novalidate>
+                    <input asp-for="Id" type="hidden" />
+                    <input asp-for="CreatedDate" type="hidden" />
+                    <input asp-for="ProductCount" type="hidden" />
+                    
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row">
+                        <!-- Category Name -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Name" class="form-label required">Category Name</label>
+                            <input asp-for="Name" class="form-control" placeholder="Enter category name" maxlength="100" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <!-- Display Order -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DisplayOrder" class="form-label">Display Order</label>
+                            <input asp-for="DisplayOrder" class="form-control" type="number" min="0" />
+                            <div class="form-text">Lower numbers appear first in listings</div>
+                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" 
+                                  placeholder="Enter category description (optional)" maxlength="500"></textarea>
+                        <div class="form-text">Brief description of this category</div>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <!-- Image URL -->
+                    <div class="mb-3">
+                        <label asp-for="ImageUrl" class="form-label">Image URL</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-image"></i>
+                            </span>
+                            <input asp-for="ImageUrl" class="form-control" 
+                                   placeholder="https://example.com/image.jpg" />
+                        </div>
+                        <div class="form-text">Optional image URL for the category</div>
+                        <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div class="mb-3" id="imagePreview" style="display: @(string.IsNullOrEmpty(Model.ImageUrl) ? "none" : "block");">
+                        <label class="form-label">Image Preview</label>
+                        <div class="border rounded p-3 bg-light">
+                            <img id="previewImg" src="@Model.ImageUrl" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 150px;">
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsActive" class="form-check-label">
+                                Active Category
+                            </label>
+                        </div>
+                        <div class="form-text">Only active categories will be visible to customers</div>
+                        @if (Model.ProductCount > 0 && !Model.IsActive)
+                        {
+                            <div class="alert alert-warning mt-2">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                This category has @Model.ProductCount product(s). Deactivating will hide these products from customers.
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger ms-2">
+                                <i class="bi bi-trash"></i>
+                                Delete
+                            </a>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i>
+                            Update Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Information Sidebar -->
+    <div class="col-lg-4">
+        <!-- Category Stats -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-graph-up text-info"></i>
+                    Category Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h4 class="text-primary">@Model.ProductCount</h4>
+                            <small class="text-muted">Products</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h4 class="text-@(Model.IsActive ? "success" : "secondary")">
+                                @(Model.IsActive ? "Active" : "Inactive")
+                            </h4>
+                            <small class="text-muted">Status</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row text-center">
+                    <div class="col-12">
+                        <small class="text-muted">
+                            <strong>Created:</strong> @Model.CreatedDate.ToString("MMM dd, yyyy")
+                        </small>
+                    </div>
+                    @if (Model.UpdatedDate.HasValue)
+                    {
+                        <div class="col-12 mt-1">
+                            <small class="text-muted">
+                                <strong>Updated:</strong> @Model.UpdatedDate.Value.ToString("MMM dd, yyyy")
+                            </small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Guidelines -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-warning"></i>
+                    Tips & Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-primary">
+                        <i class="bi bi-tag"></i>
+                        Category Naming
+                    </h6>
+                    <ul class="list-unstyled text-muted small">
+                        <li>• Use clear, descriptive names</li>
+                        <li>• Keep names under 100 characters</li>
+                        <li>• Avoid special characters</li>
+                        <li>• Use title case (e.g., "Electronics")</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-primary">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Important Notes
+                    </h6>
+                    <ul class="list-unstyled text-muted small">
+                        @if (Model.ProductCount > 0)
+                        {
+                            <li>• This category has @Model.ProductCount product(s)</li>
+                            <li>• Deactivating will hide products from customers</li>
+                            <li>• Cannot delete categories with products</li>
+                        }
+                        else
+                        {
+                            <li>• This category has no products</li>
+                            <li>• Can be safely deleted if no longer needed</li>
+                        }
+                    </ul>
+                </div>
+
+                @if (Model.ProductCount > 0)
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <small>
+                            To delete this category, first move or delete all associated products.
+                        </small>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Real-time name validation (excluding current category)
+            let nameTimeout;
+            $('#Name').on('input', function() {
+                clearTimeout(nameTimeout);
+                const name = $(this).val().trim();
+                const categoryId = $('#Id').val();
+                const $feedback = $(this).siblings('.text-danger');
+                
+                if (name.length > 0) {
+                    nameTimeout = setTimeout(function() {
+                        $.get('@Url.Action("CheckCategoryName")', { name: name, id: categoryId })
+                            .done(function(data) {
+                                if (!data.available) {
+                                    $feedback.text('A category with this name already exists.');
+                                    $feedback.show();
+                                } else {
+                                    $feedback.hide();
+                                }
+                            });
+                    }, 500);
+                }
+            });
+
+            // Image preview functionality
+            $('#ImageUrl').on('input', function() {
+                const url = $(this).val().trim();
+                const $preview = $('#imagePreview');
+                const $img = $('#previewImg');
+                
+                if (url && isValidImageUrl(url)) {
+                    $img.attr('src', url);
+                    $img.on('load', function() {
+                        $preview.show();
+                    });
+                    $img.on('error', function() {
+                        $preview.hide();
+                    });
+                } else {
+                    $preview.hide();
+                }
+            });
+
+            // Character counter for description
+            $('#Description').on('input', function() {
+                const current = $(this).val().length;
+                const max = 500;
+                const remaining = max - current;
+                
+                let $counter = $(this).siblings('.char-counter');
+                if ($counter.length === 0) {
+                    $counter = $('<div class="char-counter form-text text-end"></div>');
+                    $(this).after($counter);
+                }
+                
+                $counter.text(`${current}/${max} characters`);
+                $counter.toggleClass('text-warning', remaining < 50);
+                $counter.toggleClass('text-danger', remaining < 10);
+            });
+
+            // Status change warning
+            $('#IsActive').on('change', function() {
+                const isActive = $(this).is(':checked');
+                const productCount = parseInt($('#ProductCount').val());
+                
+                if (!isActive && productCount > 0) {
+                    if (!confirm(`This category has ${productCount} product(s). Deactivating will hide these products from customers. Are you sure?`)) {
+                        $(this).prop('checked', true);
+                    }
+                }
+            });
+
+            function isValidImageUrl(url) {
+                return /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url);
+            }
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .char-counter {
+            font-size: 0.8rem;
+        }
+        
+        .form-text {
+            font-size: 0.875rem;
+        }
+    </style>
+}

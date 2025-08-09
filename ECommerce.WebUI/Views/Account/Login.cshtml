@@ -1,0 +1,103 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Login to Your Account";
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-person-circle me-2"></i>Login to Your Account
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Login" asp-route-returnUrl="@returnUrl" method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        @if (ViewData.ModelState.ErrorCount > 0)
+                        {
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>Email Address
+                            </label>
+                            <input asp-for="Email" class="form-control" placeholder="Enter your email address" autofocus />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label">
+                                <i class="bi bi-lock me-1"></i>Password
+                            </label>
+                            <input asp-for="Password" class="form-control" placeholder="Enter your password" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label">
+                                Remember me on this device
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center bg-light">
+                    <p class="mb-2">
+                        Don't have an account? 
+                        <a asp-action="Register" asp-route-returnUrl="@returnUrl" class="text-decoration-none">
+                            Create one here
+                        </a>
+                    </p>
+                    <p class="mb-0">
+                        <a href="#" class="text-muted small">Forgot your password?</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Benefits of Creating Account -->
+            <div class="mt-4">
+                <div class="card border-0 bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Why Create an Account?</h5>
+                        <div class="row text-center mt-3">
+                            <div class="col-4">
+                                <i class="bi bi-bag-check display-6 text-primary mb-2"></i>
+                                <p class="small mb-0">Track Orders</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="bi bi-heart display-6 text-danger mb-2"></i>
+                                <p class="small mb-0">Save Favorites</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="bi bi-lightning display-6 text-warning mb-2"></i>
+                                <p class="small mb-0">Quick Checkout</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

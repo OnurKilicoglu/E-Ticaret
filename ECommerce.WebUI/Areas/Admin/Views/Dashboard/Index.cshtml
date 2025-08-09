@@ -1,0 +1,254 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="row">
+    <!-- Statistics Cards -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stats border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Orders
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalOrders</div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-primary text-white">
+                            <i class="bi bi-bag-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stats border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Monthly Revenue
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">$@Model.MonthlyRevenue.ToString("N2")</div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-success text-white">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stats border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Total Products
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalProducts</div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-info text-white">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stats border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Total Users
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalUsers</div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-warning text-white">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions and Recent Activity -->
+<div class="row">
+    <!-- Quick Actions -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-lightning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <a asp-area="Admin" asp-controller="Product" asp-action="Create" class="btn btn-primary btn-block">
+                            <i class="bi bi-plus-circle"></i>
+                            Add New Product
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a asp-area="Admin" asp-controller="Category" asp-action="Create" class="btn btn-success btn-block">
+                            <i class="bi bi-plus-circle"></i>
+                            Add New Category
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a asp-area="Admin" asp-controller="Order" asp-action="Index" class="btn btn-info btn-block">
+                            <i class="bi bi-list-check"></i>
+                            Manage Orders
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a asp-area="Admin" asp-controller="User" asp-action="Index" class="btn btn-warning btn-block">
+                            <i class="bi bi-person-gear"></i>
+                            Manage Users
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    System Alerts
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>@Model.LowStockProducts</strong> products are running low on stock.
+                    <a asp-area="Admin" asp-controller="Product" asp-action="Index" class="alert-link">View Products</a>
+                </div>
+                
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-clock-fill"></i>
+                    <strong>@Model.PendingOrders</strong> orders are pending processing.
+                    <a asp-area="Admin" asp-controller="Order" asp-action="Index" class="alert-link">View Orders</a>
+                </div>
+                
+                <div class="alert alert-success" role="alert">
+                    <i class="bi bi-person-plus-fill"></i>
+                    <strong>@Model.NewUsers</strong> new users registered this month.
+                    <a asp-area="Admin" asp-controller="User" asp-action="Index" class="alert-link">View Users</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-clock-history"></i>
+                    Recent Orders
+                </h6>
+                <a asp-area="Admin" asp-controller="Order" asp-action="Index" class="btn btn-sm btn-primary">
+                    View All Orders
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Sample data - replace with actual data from service -->
+                            <tr>
+                                <td>#ORD-001</td>
+                                <td>John Doe</td>
+                                <td>@DateTime.Now.AddDays(-1).ToString("MM/dd/yyyy")</td>
+                                <td><span class="badge bg-warning">Pending</span></td>
+                                <td>$89.99</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#ORD-002</td>
+                                <td>Jane Smith</td>
+                                <td>@DateTime.Now.AddDays(-2).ToString("MM/dd/yyyy")</td>
+                                <td><span class="badge bg-success">Delivered</span></td>
+                                <td>$156.50</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#ORD-003</td>
+                                <td>Bob Johnson</td>
+                                <td>@DateTime.Now.AddDays(-3).ToString("MM/dd/yyyy")</td>
+                                <td><span class="badge bg-info">Processing</span></td>
+                                <td>$234.75</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    
+    .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+    
+    .text-xs {
+        font-size: 0.7rem;
+    }
+    
+    .btn-block {
+        display: block;
+        width: 100%;
+    }
+</style>

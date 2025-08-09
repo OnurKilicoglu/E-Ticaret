@@ -1,0 +1,306 @@
+@model UserEditViewModel
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Users</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="Details" asp-route-id="@Model.Id">@Model.FullName</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Edit</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-pencil-square text-primary"></i>
+            Edit User: @Model.FullName
+        </h2>
+        <p class="text-muted">Update user information and settings</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                <i class="bi bi-eye"></i>
+                View Details
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Users
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Edit Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-person-gear text-primary"></i>
+                    User Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" novalidate>
+                    <input asp-for="Id" type="hidden" />
+                    
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Basic Information -->
+                    <h6 class="fw-bold mb-3">Basic Information</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="UserName" class="form-label required">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@@</span>
+                                <input asp-for="UserName" class="form-control">
+                            </div>
+                            <span asp-validation-for="UserName" class="text-danger"></span>
+                            <div class="form-text">Username is used for login authentication</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label required">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
+                                <input asp-for="Email" class="form-control">
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label">First Name</label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Enter first name">
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label">Last Name</label>
+                            <input asp-for="LastName" class="form-control" placeholder="Enter last name">
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-telephone"></i>
+                                </span>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="Enter phone number">
+                            </div>
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Role and Status -->
+                    <h6 class="fw-bold mb-3">Account Settings</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="Role" class="form-label required">User Role</label>
+                            <select asp-for="Role" class="form-select" asp-items="Model.RoleOptions">
+                                <option value="">-- Select Role --</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger"></span>
+                            <div class="form-text">
+                                <strong>Admin:</strong> Full system access and management<br>
+                                <strong>Customer:</strong> Shopping and order management only
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Account Status</label>
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Active Account
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                Inactive accounts cannot log in to the system
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Password Reset Section -->
+                    <h6 class="fw-bold mb-3">Password Management</h6>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Password Reset:</strong> Leave blank to keep current password. Enter new password to change it.
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="NewPassword" class="form-label">New Password</label>
+                            <input asp-for="NewPassword" class="form-control" placeholder="Enter new password" type="password">
+                            <span asp-validation-for="NewPassword" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmNewPassword" class="form-label">Confirm New Password</label>
+                            <input asp-for="ConfirmNewPassword" class="form-control" placeholder="Confirm new password" type="password">
+                            <span asp-validation-for="ConfirmNewPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Password Options -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input asp-for="ForcePasswordChange" class="form-check-input" type="checkbox" />
+                                <label asp-for="ForcePasswordChange" class="form-check-label">
+                                    Force password change on next login
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                User will be required to change password when they log in
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Options -->
+                    <h6 class="fw-bold mb-3">Notification Settings</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input asp-for="SendNotificationEmail" class="form-check-input" type="checkbox" />
+                                <label asp-for="SendNotificationEmail" class="form-check-label">
+                                    Send notification email about changes
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                User will receive an email about profile updates
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i>
+                                Update User
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- User Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-person-badge text-info"></i>
+                    User Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
+                         style="width: 60px; height: 60px;">
+                        <i class="bi bi-person-fill text-white fs-4"></i>
+                    </div>
+                    <h6 class="mt-2 mb-0">@Model.FullName</h6>
+                    <small class="text-muted">@@@@Model.UserName</small>
+                </div>
+                
+                <dl class="row small">
+                    <dt class="col-6">User ID:</dt>
+                    <dd class="col-6">@Model.Id</dd>
+                    
+                    <dt class="col-6">Created:</dt>
+                    <dd class="col-6">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+                    
+                    @if (Model.LastLoginDate.HasValue)
+                    {
+                        <dt class="col-6">Last Login:</dt>
+                        <dd class="col-6">@Model.LastLoginDate.Value.ToString("MMM dd, yyyy")</dd>
+                        
+                        <dt class="col-6">Login Count:</dt>
+                        <dd class="col-6">@Model.LoginCount</dd>
+                    }
+                    else
+                    {
+                        <dt class="col-6">Status:</dt>
+                        <dd class="col-6"><span class="text-muted">Never logged in</span></dd>
+                    }
+                    
+                    @if (Model.HasActivity)
+                    {
+                        <dt class="col-6">Orders:</dt>
+                        <dd class="col-6">@Model.OrderCount</dd>
+                        
+                        <dt class="col-6">Total Spent:</dt>
+                        <dd class="col-6">@Model.TotalSpent.ToString("C")</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightning text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    @if (Model.HasActivity)
+                    {
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-receipt"></i>
+                            View Orders (@Model.OrderCount)
+                        </a>
+                    }
+                    
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                        Delete User
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+}

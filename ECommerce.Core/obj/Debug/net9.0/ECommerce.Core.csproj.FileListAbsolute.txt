@@ -1,0 +1,11 @@
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Core\bin\Debug\net9.0\ECommerce.Core.deps.json
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Core\bin\Debug\net9.0\ECommerce.Core.dll
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Core\bin\Debug\net9.0\ECommerce.Core.pdb
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Core\obj\Debug\net9.0\ECommerce.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Core\obj\Debug\net9.0\ECommerce.Core.AssemblyInfoInputs.cache
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Core\obj\Debug\net9.0\ECommerce.Core.AssemblyInfo.cs
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Core\obj\Debug\net9.0\ECommerce.Core.csproj.CoreCompileInputs.cache
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Core\obj\Debug\net9.0\ECommerce.Core.dll
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Core\obj\Debug\net9.0\refint\ECommerce.Core.dll
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Core\obj\Debug\net9.0\ECommerce.Core.pdb
+C:\Users\onurk\OneDrive\Desktop\E-Ticaret\ECommerce.Core\obj\Debug\net9.0\ref\ECommerce.Core.dll

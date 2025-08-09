@@ -1,0 +1,370 @@
+@model ECommerce.WebUI.Models.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<!-- Checkout Page -->
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Checkout Header -->
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Checkout</h2>
+                <p class="text-muted">Complete your purchase securely</p>
+            </div>
+
+            <!-- Checkout Progress -->
+            <div class="progress mb-5" style="height: 8px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
+            </div>
+
+            <form asp-action="Checkout" method="post" id="checkoutForm">
+                @Html.AntiForgeryToken()
+                
+                <div class="row">
+                    <!-- Left Column - Forms -->
+                    <div class="col-lg-7">
+                        <!-- Shipping Information -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-truck me-2"></i>Shipping Information
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="FirstName" class="form-label">First Name *</label>
+                                        <input asp-for="FirstName" class="form-control" placeholder="Enter first name">
+                                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="LastName" class="form-label">Last Name *</label>
+                                        <input asp-for="LastName" class="form-control" placeholder="Enter last name">
+                                        <span asp-validation-for="LastName" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="Email" class="form-label">Email *</label>
+                                        <input asp-for="Email" class="form-control" placeholder="Enter email address">
+                                        <span asp-validation-for="Email" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="Phone" class="form-label">Phone</label>
+                                        <input asp-for="Phone" class="form-control" placeholder="Enter phone number">
+                                        <span asp-validation-for="Phone" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="AddressLine1" class="form-label">Address Line 1 *</label>
+                                        <input asp-for="AddressLine1" class="form-control" placeholder="Street address, house number">
+                                        <span asp-validation-for="AddressLine1" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="AddressLine2" class="form-label">Address Line 2</label>
+                                        <input asp-for="AddressLine2" class="form-control" placeholder="Apartment, suite, unit">
+                                        <span asp-validation-for="AddressLine2" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="City" class="form-label">City *</label>
+                                        <input asp-for="City" class="form-control" placeholder="Enter city">
+                                        <span asp-validation-for="City" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="State" class="form-label">State/Province *</label>
+                                        <input asp-for="State" class="form-control" placeholder="Enter state">
+                                        <span asp-validation-for="State" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="PostalCode" class="form-label">ZIP/Postal Code *</label>
+                                        <input asp-for="PostalCode" class="form-control" placeholder="Enter ZIP code">
+                                        <span asp-validation-for="PostalCode" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="Country" class="form-label">Country *</label>
+                                        <select asp-for="Country" class="form-select">
+                                            <option value="">Select Country</option>
+                                            <option value="US">United States</option>
+                                            <option value="CA">Canada</option>
+                                            <option value="GB">United Kingdom</option>
+                                            <option value="FR">France</option>
+                                            <option value="DE">Germany</option>
+                                            <option value="TR">Turkey</option>
+                                        </select>
+                                        <span asp-validation-for="Country" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input asp-for="SaveAddress" class="form-check-input" type="checkbox">
+                                            <label asp-for="SaveAddress" class="form-check-label">
+                                                Save this address for future orders
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Information -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-credit-card me-2"></i>Payment Information
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label asp-for="CardHolderName" class="form-label">Cardholder Name *</label>
+                                        <input asp-for="CardHolderName" class="form-control" placeholder="Name as it appears on card">
+                                        <span asp-validation-for="CardHolderName" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="CardNumber" class="form-label">Card Number *</label>
+                                        <input asp-for="CardNumber" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19">
+                                        <span asp-validation-for="CardNumber" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="ExpiryMonth" class="form-label">Month *</label>
+                                        <select asp-for="ExpiryMonth" class="form-select">
+                                            <option value="">Month</option>
+                                            @for (int i = 1; i <= 12; i++)
+                                            {
+                                                <option value="@i">@i.ToString("D2")</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="ExpiryMonth" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="ExpiryYear" class="form-label">Year *</label>
+                                        <select asp-for="ExpiryYear" class="form-select">
+                                            <option value="">Year</option>
+                                            @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 10; i++)
+                                            {
+                                                <option value="@i">@i</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="ExpiryYear" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="CVV" class="form-label">CVV *</label>
+                                        <input asp-for="CVV" class="form-control" placeholder="123" maxlength="4">
+                                        <span asp-validation-for="CVV" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Special Instructions -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-chat-text me-2"></i>Special Instructions
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <label asp-for="SpecialInstructions" class="form-label">Additional Notes</label>
+                                <textarea asp-for="SpecialInstructions" class="form-control" rows="3" 
+                                          placeholder="Any special delivery instructions or notes about your order"></textarea>
+                                <span asp-validation-for="SpecialInstructions" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Order Summary -->
+                    <div class="col-lg-5">
+                        <div class="card position-sticky" style="top: 2rem;">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-bag me-2"></i>Order Summary
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Cart Items -->
+                                <div class="cart-items mb-3">
+                                    @foreach (var item in Model.CartItems)
+                                    {
+                                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                            <img src="@item.ImageUrl" alt="@item.ProductName" 
+                                                 class="me-3 rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">@item.ProductName</h6>
+                                                <small class="text-muted">Qty: @item.Quantity</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="fw-bold">@item.FormattedTotal</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Order Totals -->
+                                <div class="order-totals">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <span>@Model.SubTotal.ToString("C")</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Shipping:</span>
+                                        <span>@(Model.ShippingCost == 0 ? "FREE" : Model.ShippingCost.ToString("C"))</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Tax:</span>
+                                        <span>@Model.Tax.ToString("C")</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between fs-5 fw-bold">
+                                        <span>Total:</span>
+                                        <span class="text-primary">@Model.Total.ToString("C")</span>
+                                    </div>
+                                </div>
+
+                                <!-- Security Notice -->
+                                <div class="mt-4 p-3 bg-light rounded">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-shield-check text-success me-2"></i>
+                                        <small class="text-muted">Your payment information is secure and encrypted</small>
+                                    </div>
+                                </div>
+
+                                <!-- Place Order Button -->
+                                <button type="submit" class="btn btn-primary btn-lg w-100 mt-4" id="placeOrderBtn">
+                                    <i class="bi bi-lock me-2"></i>
+                                    Place Order - @Model.Total.ToString("C")
+                                </button>
+
+                                <!-- Back to Cart -->
+                                <a asp-action="Index" class="btn btn-outline-secondary w-100 mt-2">
+                                    <i class="bi bi-arrow-left me-2"></i>Back to Cart
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .order-totals .d-flex {
+            padding: 0.25rem 0;
+        }
+        
+        .cart-items .border-bottom:last-child {
+            border-bottom: none !important;
+        }
+        
+        .progress {
+            border-radius: 10px;
+        }
+        
+        .progress-bar {
+            border-radius: 10px;
+        }
+        
+        .btn-primary {
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+        }
+        
+        /* Mobile Responsiveness */
+        @@media (max-width: 768px) {
+            .position-sticky {
+                position: relative !important;
+                top: auto !important;
+            }
+            
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Card number formatting
+            $('#CardNumber').on('input', function() {
+                let value = this.value.replace(/\D/g, '');
+                value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+                this.value = value;
+            });
+            
+            // Phone number formatting
+            $('#Phone').on('input', function() {
+                let value = this.value.replace(/\D/g, '');
+                if (value.length >= 10) {
+                    value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+                }
+                this.value = value;
+            });
+            
+            // Form validation
+            $('#checkoutForm').on('submit', function(e) {
+                const form = this;
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                form.classList.add('was-validated');
+                
+                if (form.checkValidity()) {
+                    // Show loading state
+                    const submitBtn = $('#placeOrderBtn');
+                    submitBtn.prop('disabled', true);
+                    submitBtn.html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
+                }
+            });
+            
+            // Auto-fill country based on postal code
+            $('#PostalCode').on('blur', function() {
+                const postalCode = this.value.trim();
+                const countrySelect = $('#Country');
+                
+                if (postalCode && !countrySelect.val()) {
+                    // US: 5 digits or 5+4 format
+                    if (/^\d{5}(-\d{4})?$/.test(postalCode)) {
+                        countrySelect.val('US');
+                    }
+                    // Canada: Letter-Digit-Letter Digit-Letter-Digit
+                    else if (/^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$/.test(postalCode)) {
+                        countrySelect.val('CA');
+                    }
+                    // UK: Various formats
+                    else if (/^[A-Za-z]{1,2}\d[A-Za-z\d]? \d[A-Za-z]{2}$/.test(postalCode)) {
+                        countrySelect.val('GB');
+                    }
+                }
+            });
+        });
+    </script>
+}

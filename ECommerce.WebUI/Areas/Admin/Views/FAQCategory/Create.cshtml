@@ -1,0 +1,459 @@
+@model FAQCategoryCreateViewModel
+@{
+    ViewData["Title"] = "Create FAQ Category";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">FAQ Categories</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Create New Category</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-plus-lg text-success"></i>
+            Create FAQ Category
+        </h2>
+        <p class="text-muted">Add a new category to organize your FAQs</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Categories
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Create Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-tag text-success"></i>
+                    Category Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Category Name -->
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label required">Category Name</label>
+                        <input asp-for="Name" class="form-control" placeholder="Enter category name..." maxlength="100">
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                        <div class="form-text">
+                            <span id="nameCount">0</span>/100 characters
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" 
+                                  placeholder="Describe what this category covers..." maxlength="500"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                        <div class="form-text">
+                            <span id="descriptionCount">0</span>/500 characters - Optional but recommended
+                        </div>
+                    </div>
+
+                    <!-- Icon Section -->
+                    <div class="mb-3">
+                        <label class="form-label">Category Icon</label>
+                        
+                        <!-- Icon Selection Tabs -->
+                        <ul class="nav nav-tabs" id="iconTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="predefined-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#predefined" type="button" role="tab">
+                                    <i class="bi bi-collection"></i>
+                                    Predefined Icons
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="upload-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#upload" type="button" role="tab">
+                                    <i class="bi bi-cloud-upload"></i>
+                                    Upload Custom
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="custom-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#custom" type="button" role="tab">
+                                    <i class="bi bi-code"></i>
+                                    Custom CSS Class
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content border border-top-0 p-3" id="iconTabContent">
+                            <!-- Predefined Icons -->
+                            <div class="tab-pane fade show active" id="predefined" role="tabpanel">
+                                <div class="row g-2">
+                                    @foreach (var icon in Model.PredefinedIcons)
+                                    {
+                                        <div class="col-2 col-sm-1">
+                                            <div class="icon-option text-center p-2 border rounded" data-icon="@icon">
+                                                <i class="@icon fs-4"></i>
+                                                <div class="small mt-1">@icon.Replace("bi bi-", "")</div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <h6>Popular Icons</h6>
+                                    <div class="row g-2">
+                                        @foreach (var icon in Model.PopularIcons)
+                                        {
+                                            <div class="col-2 col-sm-1">
+                                                <div class="icon-option text-center p-2 border rounded bg-light" data-icon="@icon">
+                                                    <i class="@icon fs-4 text-primary"></i>
+                                                    <div class="small mt-1">@icon.Replace("bi bi-", "")</div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Upload Custom Icon -->
+                            <div class="tab-pane fade" id="upload" role="tabpanel">
+                                <div class="mb-3">
+                                    <input asp-for="IconFile" type="file" class="form-control" accept="image/*">
+                                    <span asp-validation-for="IconFile" class="text-danger"></span>
+                                    <div class="form-text">
+                                        Upload a custom icon (JPG, PNG, SVG). Recommended size: 32x32px or larger.
+                                    </div>
+                                </div>
+                                <div id="imagePreview" class="mt-2" style="display: none;">
+                                    <img id="previewImg" src="" alt="Preview" style="max-width: 64px; max-height: 64px; border-radius: 0.375rem;">
+                                </div>
+                            </div>
+
+                            <!-- Custom CSS Class -->
+                            <div class="tab-pane fade" id="custom" role="tabpanel">
+                                <input asp-for="Icon" type="text" class="form-control" 
+                                       placeholder="bi bi-custom-icon or fa fa-custom">
+                                <span asp-validation-for="Icon" class="text-danger"></span>
+                                <div class="form-text">
+                                    Enter a custom CSS class for Bootstrap Icons, Font Awesome, or other icon libraries.
+                                </div>
+                                <div class="mt-2">
+                                    <div id="iconPreview" class="text-center p-3 border rounded bg-light" style="display: none;">
+                                        <i id="previewIcon" class="fs-1"></i>
+                                        <div class="small mt-2">Icon Preview</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Selected Icon Display -->
+                        <div id="selectedIconDisplay" class="mt-3 p-3 border rounded bg-light" style="display: none;">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i id="selectedIcon" class="fs-2"></i>
+                                </div>
+                                <div>
+                                    <strong>Selected Icon:</strong>
+                                    <div class="text-muted" id="selectedIconName"></div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="clearSelectedIcon()">
+                                        Clear Selection
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Display Order and Status -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="DisplayOrder" class="form-label">Display Order</label>
+                            <input asp-for="DisplayOrder" type="number" class="form-control" min="0">
+                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                            <div class="form-text">Lower numbers appear first (0 = auto-assign)</div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Active (Visible to users)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-lg"></i>
+                                Create Category
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Guidelines -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-warning"></i>
+                    Category Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6 class="small fw-bold">Naming Best Practices:</h6>
+                <ul class="small mb-3">
+                    <li>Use clear, descriptive names</li>
+                    <li>Keep names concise but meaningful</li>
+                    <li>Avoid technical jargon</li>
+                    <li>Use consistent naming conventions</li>
+                </ul>
+
+                <h6 class="small fw-bold">Organization Tips:</h6>
+                <ul class="small mb-3">
+                    <li>Group related topics together</li>
+                    <li>Set logical display order</li>
+                    <li>Choose appropriate icons</li>
+                    <li>Write helpful descriptions</li>
+                </ul>
+
+                <h6 class="small fw-bold">Icon Selection:</h6>
+                <ul class="small mb-0">
+                    <li>Use intuitive, recognizable icons</li>
+                    <li>Maintain visual consistency</li>
+                    <li>Consider accessibility</li>
+                    <li>Test on different devices</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-eye text-info"></i>
+                    Category Preview
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="category-preview p-3 border rounded bg-light">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i id="previewCategoryIcon" class="bi bi-tag fs-2 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1" id="previewCategoryName">Category Name</h6>
+                            <p class="text-muted small mb-2" id="previewCategoryDescription">Category description will appear here</p>
+                            <div>
+                                <span class="badge bg-success" id="previewCategoryStatus">Active</span>
+                                <span class="badge bg-secondary">Order: <span id="previewCategoryOrder">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Character count for name
+            $('#Name').on('input', function() {
+                const length = $(this).val().length;
+                $('#nameCount').text(length);
+                
+                if (length > 90) {
+                    $('#nameCount').addClass('text-warning');
+                } else if (length > 100) {
+                    $('#nameCount').addClass('text-danger').removeClass('text-warning');
+                } else {
+                    $('#nameCount').removeClass('text-warning text-danger');
+                }
+                
+                updatePreview();
+            });
+
+            // Character count for description
+            $('#Description').on('input', function() {
+                const length = $(this).val().length;
+                $('#descriptionCount').text(length);
+                
+                if (length > 450) {
+                    $('#descriptionCount').addClass('text-warning');
+                } else if (length > 500) {
+                    $('#descriptionCount').addClass('text-danger').removeClass('text-warning');
+                } else {
+                    $('#descriptionCount').removeClass('text-warning text-danger');
+                }
+                
+                updatePreview();
+            });
+
+            // Icon selection
+            $('.icon-option').on('click', function() {
+                $('.icon-option').removeClass('selected bg-primary text-white');
+                $(this).addClass('selected bg-primary text-white');
+                
+                const iconClass = $(this).data('icon');
+                $('#Icon').val(iconClass);
+                showSelectedIcon(iconClass);
+                updatePreview();
+            });
+
+            // Custom icon input
+            $('#Icon').on('input', function() {
+                const iconClass = $(this).val();
+                if (iconClass) {
+                    $('#previewIcon').attr('class', iconClass + ' fs-1');
+                    $('#iconPreview').show();
+                    showSelectedIcon(iconClass);
+                } else {
+                    $('#iconPreview').hide();
+                    hideSelectedIcon();
+                }
+                updatePreview();
+            });
+
+            // File upload preview
+            $('#IconFile').on('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#previewImg').attr('src', e.target.result);
+                        $('#imagePreview').show();
+                        
+                        // Clear icon selection when file is uploaded
+                        $('#Icon').val('');
+                        hideSelectedIcon();
+                        updatePreview();
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#imagePreview').hide();
+                }
+            });
+
+            // Other form inputs
+            $('#DisplayOrder, #IsActive').on('change', updatePreview);
+
+            function showSelectedIcon(iconClass) {
+                $('#selectedIcon').attr('class', iconClass + ' fs-2');
+                $('#selectedIconName').text(iconClass);
+                $('#selectedIconDisplay').show();
+            }
+
+            function hideSelectedIcon() {
+                $('#selectedIconDisplay').hide();
+            }
+
+            function updatePreview() {
+                const name = $('#Name').val() || 'Category Name';
+                const description = $('#Description').val() || 'Category description will appear here';
+                const iconClass = $('#Icon').val() || 'bi bi-tag';
+                const order = $('#DisplayOrder').val() || '0';
+                const isActive = $('#IsActive').is(':checked');
+
+                $('#previewCategoryName').text(name);
+                $('#previewCategoryDescription').text(description);
+                $('#previewCategoryIcon').attr('class', iconClass + ' fs-2 text-primary');
+                $('#previewCategoryOrder').text(order);
+                $('#previewCategoryStatus').text(isActive ? 'Active').attr('class', 'badge bg-success');
+                
+                if (!isActive) {
+                    $('#previewCategoryStatus').text('Inactive').attr('class', 'badge bg-warning');
+                }
+            }
+
+            // Form validation
+            $('form').on('submit', function(e) {
+                const name = $('#Name').val().trim();
+
+                if (!name) {
+                    e.preventDefault();
+                    alert('Please enter a category name.');
+                    $('#Name').focus();
+                    return false;
+                }
+            });
+
+            // Initialize preview
+            updatePreview();
+            $('#Name, #Description').trigger('input');
+        });
+
+        function clearSelectedIcon() {
+            $('#Icon').val('');
+            $('#selectedIconDisplay').hide();
+            $('.icon-option').removeClass('selected bg-primary text-white');
+            $('#iconPreview').hide();
+            updatePreview();
+        }
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .icon-option {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .icon-option:hover {
+            background-color: var(--bs-light);
+            transform: scale(1.05);
+        }
+        
+        .icon-option.selected {
+            background-color: var(--bs-primary) !important;
+            color: white !important;
+        }
+        
+        .category-preview {
+            border-left: 4px solid var(--bs-primary) !important;
+        }
+        
+        #imagePreview img {
+            border: 1px solid #dee2e6;
+        }
+    </style>
+}

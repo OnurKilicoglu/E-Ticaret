@@ -1,0 +1,532 @@
+@model FAQCategoryEditViewModel
+@{
+    ViewData["Title"] = "Edit FAQ Category";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">FAQ Categories</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Edit</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-pencil-square text-primary"></i>
+            Edit FAQ Category
+        </h2>
+        <p class="text-muted">Update category information and settings</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                <i class="bi bi-eye"></i>
+                View Details
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Categories
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Edit Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-tag text-primary"></i>
+                    Category Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data" novalidate>
+                    <input asp-for="Id" type="hidden" />
+                    <input asp-for="CreatedDate" type="hidden" />
+                    <input asp-for="UpdatedDate" type="hidden" />
+                    <input asp-for="FAQCount" type="hidden" />
+                    <input asp-for="ActiveFAQCount" type="hidden" />
+                    <input asp-for="TotalViews" type="hidden" />
+                    <input asp-for="CurrentIconUrl" type="hidden" />
+                    
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Category Name -->
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label required">Category Name</label>
+                        <input asp-for="Name" class="form-control" maxlength="100">
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                        <div class="form-text">
+                            <span id="nameCount">@(Model.Name?.Length ?? 0)</span>/100 characters
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" maxlength="500"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                        <div class="form-text">
+                            <span id="descriptionCount">@(Model.Description?.Length ?? 0)</span>/500 characters
+                        </div>
+                    </div>
+
+                    <!-- Icon Section -->
+                    <div class="mb-3">
+                        <label class="form-label">Category Icon</label>
+                        
+                        <!-- Current Icon Display -->
+                        @if (!string.IsNullOrEmpty(Model.Icon))
+                        {
+                            <div class="alert alert-info mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        @if (Model.Icon.StartsWith("bi "))
+                                        {
+                                            <i class="@Model.Icon fs-2"></i>
+                                        }
+                                        else
+                                        {
+                                            <img src="@Model.Icon" alt="Current Icon" style="width: 32px; height: 32px; object-fit: cover; border-radius: 0.375rem;">
+                                        }
+                                    </div>
+                                    <div>
+                                        <strong>Current Icon:</strong> @Model.Icon
+                                        <br>
+                                        <button type="button" class="btn btn-sm btn-outline-danger mt-1" onclick="clearCurrentIcon()">
+                                            Remove Current Icon
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        
+                        <!-- Icon Selection Tabs -->
+                        <ul class="nav nav-tabs" id="iconTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="predefined-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#predefined" type="button" role="tab">
+                                    <i class="bi bi-collection"></i>
+                                    Predefined Icons
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="upload-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#upload" type="button" role="tab">
+                                    <i class="bi bi-cloud-upload"></i>
+                                    Upload New
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="custom-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#custom" type="button" role="tab">
+                                    <i class="bi bi-code"></i>
+                                    Custom CSS Class
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content border border-top-0 p-3" id="iconTabContent">
+                            <!-- Predefined Icons -->
+                            <div class="tab-pane fade show active" id="predefined" role="tabpanel">
+                                <div class="row g-2">
+                                    @foreach (var icon in Model.PredefinedIcons)
+                                    {
+                                        <div class="col-2 col-sm-1">
+                                            <div class="icon-option text-center p-2 border rounded @(Model.Icon == icon ? "selected bg-primary text-white" : "")" data-icon="@icon">
+                                                <i class="@icon fs-4"></i>
+                                                <div class="small mt-1">@icon.Replace("bi bi-", "")</div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <h6>Popular Icons</h6>
+                                    <div class="row g-2">
+                                        @foreach (var icon in Model.PopularIcons)
+                                        {
+                                            <div class="col-2 col-sm-1">
+                                                <div class="icon-option text-center p-2 border rounded bg-light @(Model.Icon == icon ? "selected bg-primary text-white" : "")" data-icon="@icon">
+                                                    <i class="@icon fs-4 text-primary"></i>
+                                                    <div class="small mt-1">@icon.Replace("bi bi-", "")</div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Upload New Icon -->
+                            <div class="tab-pane fade" id="upload" role="tabpanel">
+                                <div class="mb-3">
+                                    <input asp-for="IconFile" type="file" class="form-control" accept="image/*">
+                                    <span asp-validation-for="IconFile" class="text-danger"></span>
+                                    <div class="form-text">
+                                        Upload a new icon to replace the current one. Recommended size: 32x32px or larger.
+                                    </div>
+                                </div>
+                                <div id="imagePreview" class="mt-2" style="display: none;">
+                                    <img id="previewImg" src="" alt="Preview" style="max-width: 64px; max-height: 64px; border-radius: 0.375rem;">
+                                </div>
+                            </div>
+
+                            <!-- Custom CSS Class -->
+                            <div class="tab-pane fade" id="custom" role="tabpanel">
+                                <input asp-for="Icon" type="text" class="form-control" 
+                                       placeholder="bi bi-custom-icon or fa fa-custom">
+                                <span asp-validation-for="Icon" class="text-danger"></span>
+                                <div class="form-text">
+                                    Enter a custom CSS class for Bootstrap Icons, Font Awesome, or other icon libraries.
+                                </div>
+                                <div class="mt-2">
+                                    <div id="iconPreview" class="text-center p-3 border rounded bg-light">
+                                        <i id="previewIcon" class="@(Model.Icon ?? "bi bi-tag") fs-1"></i>
+                                        <div class="small mt-2">Icon Preview</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Selected Icon Display -->
+                        <div id="selectedIconDisplay" class="mt-3 p-3 border rounded bg-light" style="@(string.IsNullOrEmpty(Model.Icon) ? "display: none;" : "")">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i id="selectedIcon" class="@(Model.Icon ?? "bi bi-tag") fs-2"></i>
+                                </div>
+                                <div>
+                                    <strong>Selected Icon:</strong>
+                                    <div class="text-muted" id="selectedIconName">@Model.Icon</div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="clearSelectedIcon()">
+                                        Clear Selection
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Display Order and Status -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="DisplayOrder" class="form-label">Display Order</label>
+                            <input asp-for="DisplayOrder" type="number" class="form-control" min="0">
+                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                            <div class="form-text">Lower numbers appear first</div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Active (Visible to users)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i>
+                                Update Category
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Category Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-info-circle text-info"></i>
+                    Category Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <dl class="row small">
+                    <dt class="col-6">Category ID:</dt>
+                    <dd class="col-6">@Model.Id</dd>
+                    
+                    <dt class="col-6">Created:</dt>
+                    <dd class="col-6">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+                    
+                    <dt class="col-6">Total FAQs:</dt>
+                    <dd class="col-6">@Model.FAQCount</dd>
+                    
+                    <dt class="col-6">Active FAQs:</dt>
+                    <dd class="col-6">@Model.ActiveFAQCount</dd>
+                    
+                    <dt class="col-6">Total Views:</dt>
+                    <dd class="col-6">@Model.TotalViews</dd>
+                    
+                    @if (Model.UpdatedDate.HasValue)
+                    {
+                        <dt class="col-6">Last Updated:</dt>
+                        <dd class="col-6">@Model.UpdatedDate.Value.ToString("MMM dd, yyyy")</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightning text-warning"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-@(Model.IsActive ? "warning" : "success") btn-sm toggle-status" 
+                            data-category-id="@Model.Id">
+                        <i class="bi bi-@(Model.IsActive ? "pause" : "play")-fill"></i>
+                        @(Model.IsActive ? "Deactivate" : "Activate") Category
+                    </button>
+                    
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-eye"></i>
+                        View Details
+                    </a>
+                    
+                    <a asp-controller="FAQ" asp-action="Index" asp-route-categoryId="@Model.Id" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-question-circle"></i>
+                        Manage FAQs (@Model.FAQCount)
+                    </a>
+                    
+                    <hr>
+                    
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                        Delete Category
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-eye text-info"></i>
+                    Live Preview
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="category-preview p-3 border rounded bg-light">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i id="previewCategoryIcon" class="@(Model.Icon ?? "bi bi-tag") fs-2 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1" id="previewCategoryName">@Model.Name</h6>
+                            <p class="text-muted small mb-2" id="previewCategoryDescription">@(Model.Description ?? "Category description")</p>
+                            <div>
+                                <span class="badge bg-@(Model.IsActive ? "success" : "warning")" id="previewCategoryStatus">@(Model.IsActive ? "Active" : "Inactive")</span>
+                                <span class="badge bg-secondary">Order: <span id="previewCategoryOrder">@Model.DisplayOrder</span></span>
+                                <span class="badge bg-info">@Model.FAQCount FAQs</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Character count for name
+            $('#Name').on('input', function() {
+                const length = $(this).val().length;
+                $('#nameCount').text(length);
+                updatePreview();
+            });
+
+            // Character count for description
+            $('#Description').on('input', function() {
+                const length = $(this).val().length;
+                $('#descriptionCount').text(length);
+                updatePreview();
+            });
+
+            // Icon selection
+            $('.icon-option').on('click', function() {
+                $('.icon-option').removeClass('selected bg-primary text-white');
+                $(this).addClass('selected bg-primary text-white');
+                
+                const iconClass = $(this).data('icon');
+                $('#Icon').val(iconClass);
+                showSelectedIcon(iconClass);
+                updatePreview();
+            });
+
+            // Custom icon input
+            $('#Icon').on('input', function() {
+                const iconClass = $(this).val();
+                if (iconClass) {
+                    $('#previewIcon').attr('class', iconClass + ' fs-1');
+                    showSelectedIcon(iconClass);
+                } else {
+                    hideSelectedIcon();
+                }
+                updatePreview();
+            });
+
+            // File upload preview
+            $('#IconFile').on('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#previewImg').attr('src', e.target.result);
+                        $('#imagePreview').show();
+                        
+                        // Clear icon selection when file is uploaded
+                        $('#Icon').val('');
+                        hideSelectedIcon();
+                        updatePreview();
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#imagePreview').hide();
+                }
+            });
+
+            // Quick status toggle
+            $('.toggle-status').on('click', function() {
+                const categoryId = $(this).data('category-id');
+                
+                $.post('@Url.Action("ToggleStatus")', { id: categoryId })
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Error updating category status');
+                    });
+            });
+
+            // Other form inputs
+            $('#DisplayOrder, #IsActive').on('change', updatePreview);
+
+            function showSelectedIcon(iconClass) {
+                $('#selectedIcon').attr('class', iconClass + ' fs-2');
+                $('#selectedIconName').text(iconClass);
+                $('#selectedIconDisplay').show();
+            }
+
+            function hideSelectedIcon() {
+                $('#selectedIconDisplay').hide();
+            }
+
+            function updatePreview() {
+                const name = $('#Name').val() || '@Model.Name';
+                const description = $('#Description').val() || '@(Model.Description ?? "Category description")';
+                const iconClass = $('#Icon').val() || '@(Model.Icon ?? "bi bi-tag")';
+                const order = $('#DisplayOrder').val() || '@Model.DisplayOrder';
+                const isActive = $('#IsActive').is(':checked');
+
+                $('#previewCategoryName').text(name);
+                $('#previewCategoryDescription').text(description);
+                $('#previewCategoryIcon').attr('class', iconClass + ' fs-2 text-primary');
+                $('#previewCategoryOrder').text(order);
+                $('#previewCategoryStatus').text(isActive ? 'Active' : 'Inactive')
+                                          .attr('class', 'badge bg-' + (isActive ? 'success' : 'warning'));
+            }
+
+            // Form validation
+            $('form').on('submit', function(e) {
+                const name = $('#Name').val().trim();
+
+                if (!name) {
+                    e.preventDefault();
+                    alert('Please enter a category name.');
+                    $('#Name').focus();
+                    return false;
+                }
+            });
+
+            // Initialize character counts
+            $('#Name, #Description').trigger('input');
+        });
+
+        function clearSelectedIcon() {
+            $('#Icon').val('');
+            $('#selectedIconDisplay').hide();
+            $('.icon-option').removeClass('selected bg-primary text-white');
+            updatePreview();
+        }
+
+        function clearCurrentIcon() {
+            $('#Icon').val('');
+            $('#CurrentIconUrl').val('');
+            $('.alert.alert-info').hide();
+            updatePreview();
+        }
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .icon-option {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .icon-option:hover {
+            background-color: var(--bs-light);
+            transform: scale(1.05);
+        }
+        
+        .icon-option.selected {
+            background-color: var(--bs-primary) !important;
+            color: white !important;
+        }
+        
+        .category-preview {
+            border-left: 4px solid var(--bs-primary) !important;
+        }
+    </style>
+}
+
+

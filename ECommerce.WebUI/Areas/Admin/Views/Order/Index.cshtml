@@ -1,0 +1,615 @@
+@model OrderListViewModel
+@{
+    ViewData["Title"] = "Orders Management";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2 class="mb-0">
+            <i class="bi bi-receipt text-primary"></i>
+            Orders Management
+        </h2>
+        <p class="text-muted">Manage customer orders and track status</p>
+    </div>
+    <div class="col-md-6 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Export" 
+               asp-route-searchTerm="@Model.SearchTerm"
+               asp-route-status="@Model.Status"
+               asp-route-paymentStatus="@Model.PaymentStatus"
+               asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+               asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+               class="btn btn-outline-success">
+                <i class="bi bi-download"></i>
+                Export CSV
+            </a>
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#statisticsModal">
+                <i class="bi bi-graph-up"></i>
+                Statistics
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["InfoMessage"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="bi bi-info-circle-fill"></i>
+        @TempData["InfoMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Quick Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.TotalOrders</h5>
+                <p class="card-text">Total Orders</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center bg-warning text-dark">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.PendingOrders</h5>
+                <p class="card-text">Pending</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.ProcessingOrders</h5>
+                <p class="card-text">Processing</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.DeliveredOrders</h5>
+                <p class="card-text">Delivered</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center bg-secondary text-white">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.TodayRevenue.ToString("C0")</h5>
+                <p class="card-text">Today Revenue</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center bg-dark text-white">
+            <div class="card-body">
+                <h5 class="card-title">@Model.Statistics.AverageOrderValue.ToString("C0")</h5>
+                <p class="card-text">Avg Order</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="searchTerm" class="form-label">Search Orders</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" id="searchTerm" name="searchTerm" 
+                           value="@Model.SearchTerm" placeholder="Order #, customer name, email...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label for="status" class="form-label">Order Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    @foreach (var statusOption in Model.StatusOptions)
+                    {
+                        <option value="@statusOption.Value" selected="@(statusOption.Value == Model.Status?.ToString())">
+                            @statusOption.Text
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="paymentStatus" class="form-label">Payment Status</label>
+                <select class="form-select" id="paymentStatus" name="paymentStatus">
+                    <option value="">All Payment Status</option>
+                    @foreach (var paymentOption in Model.PaymentStatusOptions)
+                    {
+                        <option value="@paymentOption.Value" selected="@(paymentOption.Value == Model.PaymentStatus?.ToString())">
+                            @paymentOption.Text
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="fromDate" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="fromDate" name="fromDate" 
+                       value="@(Model.FromDate?.ToString("yyyy-MM-dd"))">
+            </div>
+            <div class="col-md-2">
+                <label for="toDate" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="toDate" name="toDate" 
+                       value="@(Model.ToDate?.ToString("yyyy-MM-dd"))">
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <div class="btn-group w-100" role="group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Sort and Page Size Controls -->
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <label class="form-label me-2 mb-0">Sort by:</label>
+                    <select class="form-select w-auto me-2" name="sortBy" onchange="this.form.submit()">
+                        @foreach (var sortOption in Model.SortOptions)
+                        {
+                            <option value="@sortOption.Value" selected="@(sortOption.Value == Model.SortBy)">
+                                @sortOption.Text
+                            </option>
+                        }
+                    </select>
+                    <select class="form-select w-auto" name="sortOrder" onchange="this.form.submit()">
+                        <option value="desc" selected="@(Model.SortOrder == "desc")">Descending</option>
+                        <option value="asc" selected="@(Model.SortOrder == "asc")">Ascending</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="d-flex align-items-center justify-content-end">
+                    <label class="form-label me-2 mb-0">Show:</label>
+                    <select class="form-select w-auto" name="pageSize" onchange="this.form.submit()">
+                        <option value="10" selected="@(Model.PageSize == 10)">10</option>
+                        <option value="20" selected="@(Model.PageSize == 20)">20</option>
+                        <option value="50" selected="@(Model.PageSize == 50)">50</option>
+                        <option value="100" selected="@(Model.PageSize == 100)">100</option>
+                    </select>
+                    <span class="ms-2">per page</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Info -->
+@if (Model.TotalItems > 0)
+{
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <p class="text-muted">
+                Showing @Model.StartItem to @Model.EndItem of @Model.TotalItems orders
+                @if (Model.HasFilters)
+                {
+                    <span>with applied filters</span>
+                }
+            </p>
+        </div>
+        <div class="col-md-6 text-end">
+            <small class="text-muted">
+                Page @Model.CurrentPage of @Model.TotalPages
+            </small>
+        </div>
+    </div>
+}
+
+<!-- Orders Table -->
+<div class="card">
+    <div class="card-body">
+        @if (Model.TotalItems > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Order #</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Customer</th>
+                            <th scope="col" class="text-center">Status</th>
+                            <th scope="col" class="text-center">Payment</th>
+                            <th scope="col" class="text-end">Total</th>
+                            <th scope="col" class="text-center d-none d-lg-table-cell">Items</th>
+                            <th scope="col" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            <tr class="@(order.NeedsAttention ? "table-warning" : "")">
+                                <td>
+                                    <strong>@order.OrderNumber</strong>
+                                    @if (order.DaysOld > 7)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1">
+                                            <i class="bi bi-clock"></i>
+                                            @order.DaysOld days
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <div>@order.OrderDate.ToString("MMM dd, yyyy")</div>
+                                    <small class="text-muted">@order.OrderDate.ToString("HH:mm")</small>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>@order.CustomerName</strong>
+                                        <br>
+                                        <small class="text-muted">@order.CustomerEmail</small>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(order.ShippingCity))
+                                    {
+                                        <div>
+                                            <small class="text-muted">
+                                                <i class="bi bi-geo-alt"></i>
+                                                @order.ShippingCity
+                                            </small>
+                                        </div>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-@order.StatusCssClass">
+                                        @order.StatusDisplayName
+                                    </span>
+                                    @if (order.LastUpdated.HasValue)
+                                    {
+                                        <br>
+                                        <small class="text-muted">Updated @order.LastUpdated.Value.ToString("MMM dd")</small>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (order.PaymentStatus.HasValue)
+                                    {
+                                        <span class="badge bg-@order.PaymentStatusCssClass">
+                                            @order.PaymentStatusDisplayName
+                                        </span>
+                                        @if (order.PaymentMethod.HasValue)
+                                        {
+                                            <br>
+                                            <small class="text-muted">@order.PaymentMethod.Value</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No Payment</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <strong>@order.TotalAmount.ToString("C")</strong>
+                                </td>
+                                <td class="text-center d-none d-lg-table-cell">
+                                    <span class="badge bg-light text-dark border">
+                                        @order.ItemCount item@(order.ItemCount != 1 ? "s" : "")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@order.Id" 
+                                           class="btn btn-sm btn-outline-info" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@order.Id" 
+                                           class="btn btn-sm btn-outline-primary" title="Edit Status">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        @if (order.OrderStatus == ECommerce.Core.Entities.OrderStatus.Pending || 
+                                             order.OrderStatus == ECommerce.Core.Entities.OrderStatus.Processing)
+                                        {
+                                            <a asp-action="Delete" asp-route-id="@order.Id" 
+                                               class="btn btn-sm btn-outline-danger" title="Cancel Order">
+                                                <i class="bi bi-x-circle"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <nav aria-label="Orders pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <!-- Previous Page -->
+                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link" 
+                               asp-action="Index" 
+                               asp-route-searchTerm="@Model.SearchTerm" 
+                               asp-route-status="@Model.Status"
+                               asp-route-paymentStatus="@Model.PaymentStatus"
+                               asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                               asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                               asp-route-sortBy="@Model.SortBy"
+                               asp-route-sortOrder="@Model.SortOrder"
+                               asp-route-page="@(Model.CurrentPage - 1)" 
+                               asp-route-pageSize="@Model.PageSize">
+                                <i class="bi bi-chevron-left"></i>
+                                Previous
+                            </a>
+                        </li>
+
+                        <!-- Page Numbers -->
+                        @{
+                            var startPage = Math.Max(1, Model.CurrentPage - 2);
+                            var endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+                        }
+
+                        @if (startPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-searchTerm="@Model.SearchTerm" 
+                                   asp-route-status="@Model.Status"
+                                   asp-route-paymentStatus="@Model.PaymentStatus"
+                                   asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-sortBy="@Model.SortBy"
+                                   asp-route-sortOrder="@Model.SortOrder"
+                                   asp-route-page="1" 
+                                   asp-route-pageSize="@Model.PageSize">1</a>
+                            </li>
+                            @if (startPage > 2)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                        }
+
+                        @for (var i = startPage; i <= endPage; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-searchTerm="@Model.SearchTerm" 
+                                   asp-route-status="@Model.Status"
+                                   asp-route-paymentStatus="@Model.PaymentStatus"
+                                   asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-sortBy="@Model.SortBy"
+                                   asp-route-sortOrder="@Model.SortOrder"
+                                   asp-route-page="@i" 
+                                   asp-route-pageSize="@Model.PageSize">@i</a>
+                            </li>
+                        }
+
+                        @if (endPage < Model.TotalPages)
+                        {
+                            @if (endPage < Model.TotalPages - 1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                            <li class="page-item">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-searchTerm="@Model.SearchTerm" 
+                                   asp-route-status="@Model.Status"
+                                   asp-route-paymentStatus="@Model.PaymentStatus"
+                                   asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-sortBy="@Model.SortBy"
+                                   asp-route-sortOrder="@Model.SortOrder"
+                                   asp-route-page="@Model.TotalPages" 
+                                   asp-route-pageSize="@Model.PageSize">@Model.TotalPages</a>
+                            </li>
+                        }
+
+                        <!-- Next Page -->
+                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                            <a class="page-link" 
+                               asp-action="Index" 
+                               asp-route-searchTerm="@Model.SearchTerm" 
+                               asp-route-status="@Model.Status"
+                               asp-route-paymentStatus="@Model.PaymentStatus"
+                               asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                               asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                               asp-route-sortBy="@Model.SortBy"
+                               asp-route-sortOrder="@Model.SortOrder"
+                               asp-route-page="@(Model.CurrentPage + 1)" 
+                               asp-route-pageSize="@Model.PageSize">
+                                Next
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <!-- No Results -->
+            <div class="text-center py-5">
+                <i class="bi bi-receipt display-1 text-muted"></i>
+                <h4 class="mt-3">No orders found</h4>
+                @if (Model.HasFilters)
+                {
+                    <p class="text-muted">
+                        No orders match your search criteria.
+                        <br>
+                        <a asp-action="Index" class="btn btn-link">Clear filters</a> to see all orders.
+                    </p>
+                }
+                else
+                {
+                    <p class="text-muted">
+                        No orders have been placed yet.
+                    </p>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Statistics Modal -->
+<div class="modal fade" id="statisticsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-graph-up text-primary"></i>
+                    Order Statistics
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Order Status Distribution</h6>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Pending</span>
+                                <span>@Model.Statistics.PendingOrders</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" style="width: @(Model.Statistics.TotalOrders > 0 ? (Model.Statistics.PendingOrders * 100.0 / Model.Statistics.TotalOrders) : 0)%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Processing</span>
+                                <span>@Model.Statistics.ProcessingOrders</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" style="width: @(Model.Statistics.TotalOrders > 0 ? (Model.Statistics.ProcessingOrders * 100.0 / Model.Statistics.TotalOrders) : 0)%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Shipped</span>
+                                <span>@Model.Statistics.ShippedOrders</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-primary" style="width: @(Model.Statistics.TotalOrders > 0 ? (Model.Statistics.ShippedOrders * 100.0 / Model.Statistics.TotalOrders) : 0)%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Delivered</span>
+                                <span>@Model.Statistics.DeliveredOrders</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" style="width: @(Model.Statistics.TotalOrders > 0 ? (Model.Statistics.DeliveredOrders * 100.0 / Model.Statistics.TotalOrders) : 0)%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Revenue Overview</h6>
+                        <dl class="row">
+                            <dt class="col-sm-8">Total Revenue:</dt>
+                            <dd class="col-sm-4">@Model.Statistics.TotalRevenue.ToString("C")</dd>
+                            
+                            <dt class="col-sm-8">Today's Revenue:</dt>
+                            <dd class="col-sm-4">@Model.Statistics.TodayRevenue.ToString("C")</dd>
+                            
+                            <dt class="col-sm-8">Average Order Value:</dt>
+                            <dd class="col-sm-4">@Model.Statistics.AverageOrderValue.ToString("C")</dd>
+                            
+                            <dt class="col-sm-8">Total Orders:</dt>
+                            <dd class="col-sm-4">@Model.Statistics.TotalOrders</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-submit form when filters change
+            $('#status, #paymentStatus, #fromDate, #toDate').on('change', function() {
+                $(this).closest('form').submit();
+            });
+
+            // Highlight search terms in results
+            const searchTerm = '@Html.Raw(Model.SearchTerm)';
+            if (searchTerm && searchTerm.length > 0) {
+                $('tbody td').highlight(searchTerm, { className: 'bg-warning' });
+            }
+
+            // Quick status update functionality
+            $('.quick-status-update').on('click', function(e) {
+                e.preventDefault();
+                const orderId = $(this).data('order-id');
+                const newStatus = $(this).data('new-status');
+                
+                if (confirm(`Change order status to ${newStatus}?`)) {
+                    updateOrderStatus(orderId, newStatus);
+                }
+            });
+        });
+
+        function updateOrderStatus(orderId, newStatus) {
+            $.post('@Url.Action("UpdateStatus")', {
+                orderId: orderId,
+                newStatus: newStatus
+            })
+            .done(function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            })
+            .fail(function() {
+                alert('Error updating order status');
+            });
+        }
+
+        // Simple highlight function
+        jQuery.fn.highlight = function(text, options) {
+            const settings = $.extend({
+                className: 'highlight'
+            }, options);
+            
+            return this.each(function() {
+                const $this = $(this);
+                const html = $this.html();
+                const regex = new RegExp('(' + text + ')', 'gi');
+                const newHtml = html.replace(regex, '<span class="' + settings.className + '">$1</span>');
+                $this.html(newHtml);
+            });
+        };
+    </script>
+}

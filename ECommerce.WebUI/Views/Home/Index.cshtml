@@ -1,0 +1,278 @@
+﻿@model HomeViewModel
+@{
+    ViewData["Title"] = "Welcome to Our Store";
+}
+
+<!-- Hero Slider Section -->
+@if (Model.Sliders.Any())
+{
+    <section class="hero-section mb-5">
+        <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                @for (int i = 0; i < Model.Sliders.Count; i++)
+                {
+                    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="@i" 
+                            class="@(i == 0 ? "active" : "")" aria-label="Slide @(i + 1)"></button>
+                }
+            </div>
+            
+            <div class="carousel-inner">
+                @for (int i = 0; i < Model.Sliders.Count; i++)
+                {
+                    var slider = Model.Sliders[i];
+                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                        <div class="hero-slide" style="background-image: url('@slider.ImageUrl');">
+                            <div class="hero-overlay"></div>
+                            <div class="container">
+                                <div class="hero-content fade-in">
+                                    <h1 class="hero-title">@slider.Title</h1>
+                                    <p class="hero-description">@slider.Description</p>
+                                    @if (!string.IsNullOrEmpty(slider.LinkUrl))
+                                    {
+                                        <a href="@slider.LinkUrl" class="btn btn-primary btn-lg">
+                                            @(!string.IsNullOrEmpty(slider.LinkText) ? slider.LinkText : "Shop Now")
+                                            <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            @if (Model.Sliders.Count > 1)
+            {
+                <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            }
+        </div>
+    </section>
+}
+
+<div class="container">
+    <!-- Featured Products Section -->
+    @if (Model.FeaturedProducts.Any())
+    {
+        <section class="featured-products mb-5">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h2 class="section-title">Featured Products</h2>
+                    <p class="section-subtitle">Discover our hand-picked selection of premium products</p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                @foreach (var product in Model.FeaturedProducts)
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <partial name="_ProductCardPartial" model="product" />
+                    </div>
+                }
+            </div>
+            
+            <div class="text-center mt-4">
+                <a asp-controller="Catalog" asp-action="Index" class="btn btn-outline-primary">
+                    View All Products
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </section>
+    }
+
+    <!-- New Products Section -->
+    @if (Model.NewProducts.Any())
+    {
+        <section class="new-products mb-5">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h2 class="section-title">New Arrivals</h2>
+                    <p class="section-subtitle">Check out the latest additions to our collection</p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                @foreach (var product in Model.NewProducts)
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <partial name="_ProductCardPartial" model="product" />
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <!-- Latest Blog Posts Section -->
+    @if (Model.LatestPosts.Any())
+    {
+        <section class="latest-blog mb-5">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h2 class="section-title">Latest from Our Blog</h2>
+                    <p class="section-subtitle">Stay updated with tips, news, and product insights</p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                @foreach (var post in Model.LatestPosts.Take(3))
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <partial name="_BlogCardPartial" model="post" />
+                    </div>
+                }
+            </div>
+            
+            <div class="text-center mt-4">
+                <a asp-controller="Blog" asp-action="Index" class="btn btn-outline-primary">
+                    Read More Articles
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </section>
+    }
+
+    <!-- FAQ Teaser Section -->
+    @if (Model.FaqTeasers.Any())
+    {
+        <section class="faq-teaser mb-5">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h2 class="section-title">Frequently Asked Questions</h2>
+                    <p class="section-subtitle">Quick answers to common questions</p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                @foreach (var faq in Model.FaqTeasers)
+                {
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">@faq.Question</h5>
+                                <p class="card-text text-muted">@faq.ShortAnswer</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="bi bi-folder"></i>
+                                        @faq.CategoryName
+                                    </small>
+                                    <small class="text-primary">
+                                        <i class="bi bi-arrow-right"></i>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <div class="text-center mt-4">
+                <a asp-controller="Faq" asp-action="Index" class="btn btn-outline-primary">
+                    View All FAQs
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </section>
+    }
+
+    <!-- Newsletter Signup Section -->
+    <section class="newsletter-signup bg-light rounded-3 p-5 text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <h3 class="mb-3">Stay in the Loop</h3>
+                <p class="text-muted mb-4">Subscribe to our newsletter and be the first to know about new products, special offers, and exclusive deals.</p>
+                
+                <form asp-controller="Home" asp-action="Newsletter" method="post" class="newsletter-form">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-2">
+                        <div class="col-md-8">
+                            <input asp-for="Newsletter.Email" class="form-control form-control-lg" 
+                                   placeholder="Enter your email address" />
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                Subscribe
+                                <i class="bi bi-envelope"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-check mt-3">
+                        <input asp-for="Newsletter.AcceptPrivacyPolicy" class="form-check-input" type="checkbox" required />
+                        <label asp-for="Newsletter.AcceptPrivacyPolicy" class="form-check-label small text-muted">
+                            I agree to the <a asp-controller="Home" asp-action="Privacy">privacy policy</a>
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Features Banner -->
+<section class="features-banner mt-5 bg-primary text-white py-4">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <div class="feature-item">
+                    <i class="bi bi-truck display-4 mb-2"></i>
+                    <h6>Free Shipping</h6>
+                    <small>On orders over $99</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-item">
+                    <i class="bi bi-arrow-repeat display-4 mb-2"></i>
+                    <h6>Easy Returns</h6>
+                    <small>30-day return policy</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-item">
+                    <i class="bi bi-shield-check display-4 mb-2"></i>
+                    <h6>Secure Payment</h6>
+                    <small>100% protected</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-item">
+                    <i class="bi bi-headset display-4 mb-2"></i>
+                    <h6>24/7 Support</h6>
+                    <small>Always here to help</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-dismiss toast messages
+            $('.toast').each(function() {
+                var toast = new bootstrap.Toast(this, {
+                    autohide: true,
+                    delay: 5000
+                });
+                toast.show();
+            });
+
+            // Newsletter form submission
+            $('.newsletter-form').on('submit', function(e) {
+                var submitBtn = $(this).find('button[type="submit"]');
+                var originalText = submitBtn.html();
+                
+                submitBtn.prop('disabled', true).html('<span class="loading-spinner"></span> Subscribing...');
+                
+                // Re-enable button after form submission
+                setTimeout(function() {
+                    submitBtn.prop('disabled', false).html(originalText);
+                }, 2000);
+            });
+        });
+    </script>
+}

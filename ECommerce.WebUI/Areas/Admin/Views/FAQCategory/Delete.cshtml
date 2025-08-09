@@ -1,0 +1,540 @@
+@model FAQCategoryDeleteViewModel
+@{
+    ViewData["Title"] = "Delete FAQ Category";
+}
+
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">FAQ Categories</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Delete</li>
+            </ol>
+        </nav>
+        <h2 class="mb-0">
+            <i class="bi bi-trash text-danger"></i>
+            Delete FAQ Category
+        </h2>
+        <p class="text-muted">Remove category and manage associated FAQs</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                <i class="bi bi-eye"></i>
+                View Details
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Categories
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Messages -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Deletion Warning -->
+<div class="alert alert-warning" role="alert">
+    <div class="d-flex">
+        <div class="flex-shrink-0">
+            <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+        </div>
+        <div class="flex-grow-1 ms-3">
+            <h5 class="alert-heading">Category Deletion Warning</h5>
+            <p class="mb-2">
+                You are about to delete the FAQ category "@Model.Name" from the system.
+            </p>
+            <ul class="mb-2">
+                <li><strong>Soft Delete:</strong> Category will be deactivated and hidden from users</li>
+                <li><strong>Hard Delete:</strong> Category and references will be permanently removed</li>
+                <li><strong>FAQ Impact:</strong> @Model.FAQCount FAQ(s) are currently in this category</li>
+                <li><strong>User Impact:</strong> Category will no longer be available for FAQ organization</li>
+            </ul>
+            @if (Model.FAQCount > 0)
+            {
+                <div class="alert alert-info mt-2 mb-0">
+                    <strong>Important:</strong> You can move the associated FAQs to another category before deletion.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Deletion Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-trash"></i>
+                    Category Deletion Confirmation
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Category Preview -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Category to be deleted:</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="category-preview">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            @if (!string.IsNullOrEmpty(Model.Icon))
+                                            {
+                                                @if (Model.Icon.StartsWith("bi "))
+                                                {
+                                                    <i class="@Model.Icon fs-1 text-primary"></i>
+                                                }
+                                                else
+                                                {
+                                                    <img src="@Model.Icon" alt="@Model.Name" style="width: 48px; height: 48px; object-fit: cover; border-radius: 0.375rem;">
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-tag fs-1 text-muted"></i>
+                                            }
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h5 class="fw-bold text-primary mb-1">@Model.Name</h5>
+                                            @if (!string.IsNullOrEmpty(Model.Description))
+                                            {
+                                                <p class="text-muted mt-2">@Model.TruncatedDescription</p>
+                                            }
+                                            
+                                            <div class="d-flex gap-2 mt-3">
+                                                <span class="badge bg-@Model.StatusCssClass">
+                                                    @Model.StatusDisplayName
+                                                </span>
+                                                <span class="badge bg-secondary">
+                                                    @Model.FAQCount Total FAQs
+                                                </span>
+                                                <span class="badge bg-info">
+                                                    @Model.TotalViews Total Views
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form asp-action="Delete" method="post" novalidate>
+                    <input asp-for="Id" type="hidden" />
+                    <input asp-for="Name" type="hidden" />
+                    <input asp-for="Description" type="hidden" />
+                    <input asp-for="Icon" type="hidden" />
+                    <input asp-for="FAQCount" type="hidden" />
+                    <input asp-for="TotalViews" type="hidden" />
+                    <input asp-for="IsActive" type="hidden" />
+                    <input asp-for="CreatedDate" type="hidden" />
+                    <input asp-for="UpdatedDate" type="hidden" />
+                    
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Category Information Display -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Category Information</h6>
+                            <dl class="row">
+                                <dt class="col-sm-4">ID:</dt>
+                                <dd class="col-sm-8">@Model.Id</dd>
+                                
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-@Model.StatusCssClass">
+                                        @Model.StatusDisplayName
+                                    </span>
+                                </dd>
+                                
+                                <dt class="col-sm-4">Created:</dt>
+                                <dd class="col-sm-8">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+                                
+                                @if (Model.UpdatedDate.HasValue)
+                                {
+                                    <dt class="col-sm-4">Updated:</dt>
+                                    <dd class="col-sm-8">@Model.UpdatedDate.Value.ToString("MMM dd, yyyy")</dd>
+                                }
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Usage Statistics</h6>
+                            <dl class="row">
+                                <dt class="col-sm-5">Total FAQs:</dt>
+                                <dd class="col-sm-7">@Model.FAQCount</dd>
+                                
+                                <dt class="col-sm-5">Active FAQs:</dt>
+                                <dd class="col-sm-7">@Model.ActiveFAQCount</dd>
+                                
+                                <dt class="col-sm-5">Total Views:</dt>
+                                <dd class="col-sm-7">@Model.TotalViews</dd>
+                                
+                                <dt class="col-sm-5">Impact Level:</dt>
+                                <dd class="col-sm-7">
+                                    @if (Model.FAQCount == 0)
+                                    {
+                                        <span class="badge bg-success">Low - No FAQs</span>
+                                    }
+                                    else if (Model.FAQCount <= 5)
+                                    {
+                                        <span class="badge bg-warning">Medium - Few FAQs</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">High - Many FAQs</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Management Options -->
+                    @if (Model.FAQCount > 0)
+                    {
+                        <h6 class="fw-bold mb-3">FAQ Management Options</h6>
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="form-check mb-3">
+                                    <input asp-for="MoveFAQsToCategoryId" type="radio" class="form-check-input" 
+                                           value="" id="leaveUncategorized" name="faqAction" checked>
+                                    <label class="form-check-label" for="leaveUncategorized">
+                                        <strong>Leave FAQs uncategorized</strong>
+                                        <div class="form-text">FAQs will remain in the system but without a category</div>
+                                    </label>
+                                </div>
+                                
+                                @if (Model.AvailableCategories.Any())
+                                {
+                                    <div class="form-check mb-3">
+                                        <input type="radio" class="form-check-input" id="moveToCategory" name="faqAction">
+                                        <label class="form-check-label" for="moveToCategory">
+                                            <strong>Move FAQs to another category</strong>
+                                            <div class="form-text">Transfer all FAQs to a different category before deletion</div>
+                                        </label>
+                                    </div>
+                                    <div class="ms-4 mb-3" id="categorySelection" style="display: none;">
+                                        <select asp-for="MoveFAQsToCategoryId" class="form-select" asp-items="Model.AvailableCategories">
+                                            <option value="">Select target category</option>
+                                        </select>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Deletion Options -->
+                    <h6 class="fw-bold mb-3">Deletion Options</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input asp-for="HardDelete" class="form-check-input" type="checkbox" />
+                                <label asp-for="HardDelete" class="form-check-label">
+                                    <strong>Permanent Deletion</strong> (Hard Delete)
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-exclamation-triangle text-warning"></i>
+                                <strong>Warning:</strong> This will permanently remove the category and all references.
+                                If unchecked, the category will be deactivated (soft delete).
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Deletion Reason -->
+                    <div class="mb-4">
+                        <label asp-for="Reason" class="form-label required">Reason for Deletion</label>
+                        <textarea asp-for="Reason" class="form-control" rows="3" 
+                                  placeholder="Please provide a reason for deleting this category..."></textarea>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle"></i>
+                            This reason will be logged for audit purposes.
+                        </div>
+                    </div>
+
+                    <!-- Final Confirmation -->
+                    <div class="alert alert-danger" role="alert">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Final Confirmation Required
+                        </h6>
+                        <p class="mb-2">
+                            Please review all information above carefully.
+                        </p>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmDeletion" required>
+                            <label class="form-check-label" for="confirmDeletion">
+                                <strong>I understand the consequences and confirm the deletion of category "@Model.Name"</strong>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                                Do Not Delete
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
+                                <i class="bi bi-trash"></i>
+                                Delete Category
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Deletion Impact -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle text-warning"></i>
+                    Deletion Impact
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="impact-summary">
+                    <div class="impact-item @(Model.IsActive ? "text-warning" : "text-success")">
+                        <i class="bi bi-@(Model.IsActive ? "exclamation-triangle" : "check-circle") me-2"></i>
+                        <span>@(Model.IsActive ? "Active category - visible on website" : "Inactive category - already hidden")</span>
+                    </div>
+                    
+                    <div class="impact-item @(Model.FAQCount > 0 ? "text-warning" : "text-success")">
+                        <i class="bi bi-@(Model.FAQCount > 0 ? "list-ul" : "check-circle") me-2"></i>
+                        <span>@(Model.FAQCount > 0 ? $"{Model.FAQCount} FAQ(s) will be affected" : "No FAQs to be affected")</span>
+                    </div>
+                    
+                    <div class="impact-item @(Model.TotalViews > 0 ? "text-info" : "text-success")">
+                        <i class="bi bi-@(Model.TotalViews > 0 ? "eye" : "check-circle") me-2"></i>
+                        <span>@(Model.TotalViews > 0 ? $"{Model.TotalViews} user views will be impacted" : "No user views to impact")</span>
+                    </div>
+                    
+                    <div class="impact-item text-info">
+                        <i class="bi bi-search me-2"></i>
+                        <span>Category will be removed from search filters</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Associated FAQs Preview -->
+        @if (Model.AssociatedFAQs.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-list-ul text-info"></i>
+                        Associated FAQs (First 10)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @foreach (var faq in Model.AssociatedFAQs)
+                    {
+                        <div class="mb-2 pb-2 border-bottom">
+                            <div class="small fw-bold">@faq.Question</div>
+                            <div class="small text-muted">
+                                <span class="badge bg-@(faq.IsActive ? "success" : "warning") me-1">
+                                    @(faq.IsActive ? "Active" : "Inactive")
+                                </span>
+                                @faq.ViewCount views
+                            </div>
+                        </div>
+                    }
+                    @if (Model.FAQCount > 10)
+                    {
+                        <div class="text-center mt-2">
+                            <small class="text-muted">And @(Model.FAQCount - 10) more FAQs...</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Alternative Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightbulb text-info"></i>
+                    Alternative Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-3">
+                    Consider these alternatives before deleting:
+                </p>
+                
+                <div class="d-grid gap-2">
+                    @if (Model.IsActive)
+                    {
+                        <button type="button" class="btn btn-outline-warning btn-sm deactivate-category" 
+                                data-category-id="@Model.Id">
+                            <i class="bi bi-pause-fill"></i>
+                            Just Deactivate
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-outline-success btn-sm activate-category" 
+                                data-category-id="@Model.Id">
+                            <i class="bi bi-play-fill"></i>
+                            Activate Instead
+                        </button>
+                    }
+                    
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                        Edit Category Instead
+                    </a>
+                    
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-eye"></i>
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Enable/disable delete button based on confirmation checkbox
+            $('#confirmDeletion').on('change', function() {
+                $('#deleteBtn').prop('disabled', !this.checked);
+            });
+
+            // FAQ action radio buttons
+            $('input[name="faqAction"]').on('change', function() {
+                if ($(this).attr('id') === 'moveToCategory') {
+                    $('#categorySelection').show();
+                    $('#MoveFAQsToCategoryId').prop('required', true);
+                } else {
+                    $('#categorySelection').hide();
+                    $('#MoveFAQsToCategoryId').prop('required', false);
+                    $('#MoveFAQsToCategoryId').val('');
+                }
+            });
+
+            // Form submission with final confirmation
+            $('form').on('submit', function(e) {
+                if (!$('#confirmDeletion').is(':checked')) {
+                    e.preventDefault();
+                    alert('Please confirm that you understand the consequences.');
+                    return false;
+                }
+
+                const reason = $('#Reason').val().trim();
+                if (!reason) {
+                    e.preventDefault();
+                    alert('Please provide a reason for deletion.');
+                    $('#Reason').focus();
+                    return false;
+                }
+
+                const isHardDelete = $('#HardDelete').is(':checked');
+                const deleteType = isHardDelete ? 'permanently delete' : 'deactivate';
+                
+                let confirmMessage = `Are you sure you want to ${deleteType} category "@Model.Name"?\n\n` +
+                                   `This will:\n` +
+                                   `• ${isHardDelete ? 'Permanently remove' : 'Deactivate'} the category\n`;
+
+                @if (Model.FAQCount > 0)
+                {
+                    <text>
+                    const moveToCategory = $('#moveToCategory').is(':checked');
+                    if (moveToCategory) {
+                        const targetCategory = $('#MoveFAQsToCategoryId option:selected').text();
+                        confirmMessage += `• Move @Model.FAQCount FAQ(s) to "${targetCategory}"\n`;
+                    } else {
+                        confirmMessage += `• Leave @Model.FAQCount FAQ(s) uncategorized\n`;
+                    }
+                    </text>
+                }
+
+                confirmMessage += `• Remove from website navigation and filters\n` +
+                                `• Log the action for audit purposes\n` +
+                                `\nReason: ${reason}\n\n` +
+                                `${isHardDelete ? 'This action cannot be undone.' : 'Category can be reactivated later.'}`;
+
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Alternative action functionality
+            $('.deactivate-category, .activate-category').on('click', function() {
+                const categoryId = $(this).data('category-id');
+                const action = $(this).hasClass('deactivate-category') ? 'deactivate' : 'activate';
+                
+                if (confirm(`Are you sure you want to ${action} this category instead of deleting it?`)) {
+                    $.post('@Url.Action("ToggleStatus")', { id: categoryId })
+                        .done(function(response) {
+                            if (response.success) {
+                                window.location.href = '@Url.Action("Details", new { id = Model.Id })';
+                            } else {
+                                alert('Error: ' + response.message);
+                            }
+                        })
+                        .fail(function() {
+                            alert('Error updating category status');
+                        });
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .impact-summary {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .impact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .category-preview {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            border-left: 4px solid var(--bs-primary);
+        }
+    </style>
+}
+
+
